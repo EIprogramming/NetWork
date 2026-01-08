@@ -1,25 +1,48 @@
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--font-color);
+  text-decoration: none;
+}
+
 .app {
   display: flex;
   align-items: center;
   flex-direction: column;
-  flex-wrap: nowrap;
+  min-height: 100%;
+
+  box-sizing: border-box;
   background-color: var(--background-color);
 }
 
-.title {
-  margin-top: 12px;
-  margin-bottom: 12px;
-  font-size: 64px;
-  font-family: Orbitron, JetBrainsMono, monospace;
-  text-shadow: 0px 4px 9px rgba(0,0,0,0.6);
-  font-weight: bold;
-  flex-grow: 100%;
+.header, .footer {
+  box-sizing: border-box;
+  color: var(--font-white);
+
+  width: 100%;
+  height: 3rem;
+  padding: 0.75rem 4rem;
+  background-color: var(--dark-background-color);
+
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
-.footer { /*TODO: FIX THE FOOTER WHEN ZOOMING OUT*/
-  width: 100vw;
-  height: 100px;
-  background-color: var(--dark-background-color);
+.header-nav {
+  display: flex; 
+  flex-direction: row;
+  align-items: center;
+}
+
+.header-divider {
+  flex-grow: 0.05;
+}
+
+.content {
+  padding: 20px;
+  flex-grow: 1;
 }
 
 /* Prevent image dragging issue when trying to drag across schedule */
