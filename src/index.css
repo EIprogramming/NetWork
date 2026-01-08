@@ -1,0 +1,56 @@
+@font-face {
+ font-family: "JetBrainsMono";
+  src: local("JetBrainsMono"),
+    url("./fonts/JetBrainsMono/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
+}
+
+@font-face {
+ font-family: "Orbitron";
+  src: local("Orbitron"),
+    url("./fonts/Orbitron/Orbitron-VariableFont_wght.ttf") format("truetype");
+}
+
+:root {
+  box-sizing: border-box;
+  font-family: JetBrainsMono, monospace;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  --font-color: #dbdbdb;
+  color: var(--font-color);
+  --background-color: #23395e;
+  --dark-background-color: #152137;
+  background-color: var(--dark-background-color);
+  --accent-color: #0071ad;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+    
+  /*Remove anti aliasing for images*/
+  image-rendering: pixelated; 
+  image-rendering: -moz-crisp-edges; 
+  -ms-interpolation-mode: nearest-neighbor; 
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  font-size: 16px;
+  color: var(--font-color);
+  background-color: transparent;
+  border: 2px solid var(--accent-color);
+  border-radius: 2px;
+}
+
+button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+  background-color: rgba(0, 0, 0, 0.25);
+}

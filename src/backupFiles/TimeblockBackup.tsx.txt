@@ -1,0 +1,56 @@
+//import {useRef, useState } from 'react'
+import './Timeblock.css'
+
+interface Props {
+    col: number,
+    row: number,
+    isActive: boolean,
+    handleSelected: (col: number, row: number, isFirstElement: boolean) => void,
+}
+
+function Timeblock( {col, row, isActive, handleSelected} : Props) {
+    const availableColor = "rgb(100, 200, 100)";
+    const unavailableColor = "rgba(200, 100, 100, 1)";
+
+    function getBackgroundColor() {
+        if (isActive) { return availableColor; }
+        else { return unavailableColor; }
+    }
+
+    function handleMouseDown(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        if (e.buttons % 2) {
+            handleSelected(col, row, true);
+        }
+    }
+
+    function handleMouseEnter(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        if (e.buttons % 2) {
+            handleSelected(col, row, false);
+        }
+    }
+
+    function getBorder() {
+        if (row % 4 == 1) {
+            return "1px dashed black";
+        } else if (row % 4 == 3) {
+            return "1px solid black";
+        }
+    }
+
+    return (
+        <>
+            <div
+            className="timeblock no-drag"
+            id={`C${col} R${row}`}
+            onMouseDown={(e) => handleMouseDown(e)}
+            onMouseEnter={(e) => handleMouseEnter(e)}
+            style={{
+                "backgroundColor": getBackgroundColor(),
+                borderRight: "1px solid black",
+                borderBottom: getBorder(),
+            }}></div>
+        </>
+    )
+}
+
+export default Timeblock

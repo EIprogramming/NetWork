@@ -1,0 +1,38 @@
+.schedule-column:after {
+    clear: both;
+    content: '';
+}
+
+.schedule {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.schedule-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    margin-bottom: 2rem;
+}
+
+.titleblock {
+    box-sizing: border-box;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px solid black;
+    font-weight: bold;
+}
+
+.emptyblock {
+    box-sizing: border-box;
+    width: 100px;
+    height: 40px;
+    border: none;
+}
+
