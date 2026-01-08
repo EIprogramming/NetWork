@@ -1,0 +1,36 @@
+.event-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.event-title {
+    width: 12rem;
+    height: 3rem;
+    font-size: 24px;
+    text-align: center;
+}
+
+.event-title:focus {
+    outline: none;
+}
+
+.event-calendar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.event-spacer {
+    height: 2rem;
+}
+
+/* increase size of react-aria calendar component*/
+.event-calendar {
+  --cell-size: 4rem;
+  --font-size: 1.25rem; /* element size */
+  --font-size-lg: 1.25rem; /* header font size */
+  --spacing: 0.35rem; /* chevron size */
+  width: calc(var(--cell-size) * 7);
+}
+
