@@ -46,7 +46,7 @@ function Timeblock( {col, row, value, handleSelected} : Props) {
             return "1px solid black";
         }
     }
-
+    /*TODO: ADD ACCESSIBLE GRID BY ARROW KEYS */
     return (
         <>
             <div
