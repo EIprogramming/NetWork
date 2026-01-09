@@ -49,7 +49,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
                         color={activeState.color}
                         setColor={(color) => {setStateColor(activeState, color)}}
                         isDefault={activeState.isDefault}
-                        tabIndex={activeState.isDefault? -1 : 1} />
+                        tabIndex={activeState.isDefault? -1 : 0} />
                     { activeState.isDefault ?
                         <div className="selector-trash"></div>
                         : <button key={`selector-trash-${label}`}className="selector-trash"

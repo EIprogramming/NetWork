@@ -64,7 +64,7 @@ function Selector( {activeStates, setActiveStates } : Props ) {
                     <button type="submit" className="selector-form-element selector-form-submit">P</button>
                     <input name="newState" className="selector-form-element selector-form-input" id="newState"
                         type="text" autoFocus autoComplete="off"/>
-                    <ColorPicker color={color} setColor={setColor} isDefault={false} />
+                    <ColorPicker color={color} setColor={setColor} isDefault={false} tabIndex={0} />
                     <button type="button" className="selector-form-element selector-form-trash" onClick={() => setIsButtonVisible(true)}>T</button>
                 </form>
                 }
