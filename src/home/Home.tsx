@@ -1,22 +1,33 @@
 import { useState } from 'react';
 import { RangeCalendar } from './calendar/RangeCalendar';
-import {parseDate, getLocalTimeZone} from '@internationalized/date';
+import {getLocalTimeZone, CalendarDate} from '@internationalized/date';
 import {useDateFormatter} from 'react-aria';
 import './Home.css'
 import { getTimeRange } from '../utils.ts'
 
+type TimeRange = {
+    start: CalendarDate,
+    end: CalendarDate,
+}
+
 function Home() {
-    const [range, setRange] = useState({
-        start: parseDate('2025-02-03'),
-        end: parseDate('2025-02-12')
-    });
+    const [range, setRange] = useState<TimeRange | null>(null);
 
     const formatter = useDateFormatter({ dateStyle: 'long'});
+
+    function createSchedule(formData: FormData) {
+        const eventName = formData.get("event-name");
+        const startTime = formData.get("event-start-times");
+        const endTime = formData.get("event-end-times");
+        if (range === null) return;
+        console.log(eventName, " ", range.start, range.end, startTime, endTime);
+        /* TODO: Build sched on next page with router params */
+    }
 
     return (
         <>
         <h1>NetWork - Schedule with Friends!</h1>
-        <form className="event-wrapper">
+        <form action={createSchedule} className="event-wrapper">
             <input type="text" name="event-title" className="event-title"
             autoComplete="off" placeholder="Event Name"/>
             <span className="event-spacer"></span>
@@ -26,7 +37,7 @@ function Home() {
                     className="event-calendar react-aria-RangeCalendar"
                     value={range}
                     onChange={setRange} />
-                    <p>Selected range: {formatter.formatRange(
+                    <p>Selected range: {range === null ? <></> :formatter.formatRange(
                         range.start.toDate(getLocalTimeZone()),
                         range.end.toDate(getLocalTimeZone())
                     )}</p>
@@ -34,15 +45,15 @@ function Home() {
                 <div className="event-start-end-wrapper">
                     <label htmlFor="event-start-times">Start Time: </label>
                     {/* TODO: CHANGE SELECTS TO ARIA-REACT SELECTS FOR STYLING */}
-                    <select name="event-start-times">
-                        <option value="" selected disabled hidden>Start Time</option>
+                    <select defaultValue="" name="event-start-times">
+                        <option value="" disabled hidden>Start Time</option>
                         {getTimeRange(0, 24).map((time, index) => {
                             return <option key={`event-start-time${index}`} value={time}>{time}</option>
                         })}
                     </select>
                     <label htmlFor="event-start-times">End Time: </label>
-                    <select name="event-end-times">
-                        <option value="" selected disabled hidden>End Time</option>
+                    <select defaultValue="" name="event-end-times">
+                        <option value="" disabled hidden>End Time</option>
                         {getTimeRange(0, 24).map((time, index) => {
                             return <option key={`event-end-time${index}`} value={time}>{time}</option>
                         })}
