@@ -1,7 +1,7 @@
 .selector-add {
     background-color: rgba(0, 0, 0, 0.25);
 
-    border: 2px solid rgba(255, 255, 255, 0.75);
+    border: 2px solid var(--border-color);
 }
 
 .selector-button {
@@ -21,7 +21,7 @@
     height: 23px;
     min-width: 25px;
     padding: 1px;
-    border: 1px solid white;
+    border: 1px solid var(--border-color);
     border-radius: 2px;
 }
 

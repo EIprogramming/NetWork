@@ -6,11 +6,12 @@ interface Props {
     color: string,
     setColor: React.Dispatch<React.SetStateAction<string>>,
     isDefault: boolean,
+    tabIndex: number,
 }
 
 // BIG TODO: MAKE A LIST OF PRESET COLOURS INSTEAD OF A COLOUR PICKER
 
-function ColorPicker( {color, setColor, isDefault } : Props ) {
+function ColorPicker( {color, setColor, isDefault, tabIndex } : Props ) {
     const [isDisplayColorPicker, setIsDisplayColorPicker] = useState(false);
     //return <HexColorPicker color={color} onChange={setColor} />;
 
@@ -20,7 +21,7 @@ function ColorPicker( {color, setColor, isDefault } : Props ) {
 
     return (
         <>
-            <button type="button" className="selector-form-element selector-form-color" onClick={displayColorPicker}
+            <button tabIndex={tabIndex} type="button" className="selector-form-element selector-form-color" onClick={displayColorPicker}
             style={{
                 backgroundColor: color,
             }}/>
