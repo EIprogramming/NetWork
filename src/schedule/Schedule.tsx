@@ -4,6 +4,14 @@ import Selector from './Selector.tsx'
 import State from './state.ts';
 import './Schedule.css'
 import { getTimeRange } from '../utils.ts'
+import { useSearchParams } from "react-router"
+import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
+import { useDateFormatter } from 'react-aria';
+
+type TimeRange = {
+    start: CalendarDate,
+    end: CalendarDate,
+}
 
 /**
  * Edits an array in a rectangular section between two corners (firstElement) and (lastElement)
@@ -46,10 +54,39 @@ function initialize2DArray(columns: number, rows: number, value: any="") {
 }
 
 function Schedule() {
+    const [searchParams, _setSearchParams] = useSearchParams();
+
     // initialize the days and times (in 12 hour format) that the schedule spans
     // TODO: add feature to specify these by the user
-    const [days, _setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-    const [times, _setTimes] = useState(getTimeRange(9, 24));
+    const startDate = searchParams.get("sDay")
+    const endDate = searchParams.get("eDay")
+    const range: TimeRange = {
+        start: parseDate(startDate? startDate : ""),
+        end: parseDate(endDate? endDate : "")
+    };
+
+    const formatter = useDateFormatter({ month: 'long', weekday: 'long', day: 'numeric' });
+
+    function makeDays(range: TimeRange) {
+        const dates = [];
+        let currentDate: CalendarDate = range.start;
+        let i = 0; // prevent infinite loops by having maximum loop limit
+        // .compare() < 0 returns true if the first date is before the second
+        while (currentDate.compare(range.end) <= 0 && i <= 20) {
+            i++;
+            const currentDateStr = formatter.format(currentDate.toDate(getLocalTimeZone()))
+            dates.push(currentDateStr);
+            currentDate = currentDate.add({days: 1});
+        }
+    
+        return dates;
+    }
+
+    //const [days, _setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+    const [days, _setDays] = useState(makeDays(range));
+    const startTime = Number(searchParams.get("sTime"));
+    const endTime = Number(searchParams.get("eTime"));
+    const [times, _setTimes] = useState(getTimeRange(startTime, endTime));
 
     // an array of the possible states that a Timeblock may take
     // TODO: add feature to specify these by the user

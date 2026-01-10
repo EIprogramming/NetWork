@@ -1,5 +1,5 @@
 .timeblock {
     box-sizing: border-box;
-    width: 100px;
-    height: 10px;
+    width: var(--block-width);
+    height: var(--timeblock-height);
 }

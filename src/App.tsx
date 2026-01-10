@@ -14,7 +14,6 @@ function App() {
             <nav className="header-nav">
               <Link to="/">NetWork</Link>
               <span className="header-divider"></span>
-              <Link to="/schedule">Schedule</Link>
             </nav>
           </header>
         <main className="content">
