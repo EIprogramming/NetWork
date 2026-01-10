@@ -56,6 +56,8 @@ function initialize2DArray(columns: number, rows: number, value: any="") {
 function Schedule() {
     const [searchParams, _setSearchParams] = useSearchParams();
 
+    const [title, _setTitle] = useState(searchParams.get("name"));
+
     // initialize the days and times (in 12 hour format) that the schedule spans
     // TODO: add feature to specify these by the user
     const startDate = searchParams.get("sDay")
@@ -212,7 +214,7 @@ function Schedule() {
         return (
             <>
             <div className="schedule-column no-drag">
-            <div className="emptyblock"></div>
+                <div className="emptyblock"></div>
                 {times.map((time, index) => {
                     return <div key={`${time}${index}`} className="titleblock">{time}</div>
                 })}
@@ -236,6 +238,7 @@ function Schedule() {
 
     return (
         <>
+        <h1 className="schedule-title">{title}</h1>
         <div className="schedule-container">
             <div
             draggable="false"

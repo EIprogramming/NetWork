@@ -18,13 +18,11 @@ function Home() {
     const formatter = useDateFormatter({ dateStyle: 'long'});
 
     function createSchedule(formData: FormData) {
+        if (range === null) return;
         const eventTitle = formData.get("event-title");
         const startTime = formData.get("event-start-times");
         const endTime = formData.get("event-end-times");
-        if (range === null) return;
-        navigate(`/schedule?name=${eventTitle}&sDay=${range.start}&eDay=${range.end}&sTime=${startTime}&eTime=${endTime}`)
-        console.log(eventTitle, " ", range.start, range.end, startTime, endTime);
-        /* TODO: Build sched on next page with router params */
+        navigate(`/schedule?name=${eventTitle}&sDay=${range.start}&eDay=${range.end}&sTime=${startTime}&eTime=${endTime}`);
     }
 
     return (
