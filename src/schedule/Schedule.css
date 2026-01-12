@@ -1,6 +1,10 @@
-.schedule-column:after {
-    clear: both;
-    content: '';
+.schedule-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    flex-grow: 1;
 }
 
 .schedule {
@@ -11,6 +15,12 @@
     --block-width: 120px;
     --timeblock-height: 15px;
 }
+
+.schedule-column:after {
+    clear: both;
+    content: '';
+}
+
 
 .schedule-title {
     text-align: center;

@@ -238,19 +238,21 @@ function Schedule() {
 
     return (
         <>
-        <h1 className="schedule-title">{title}</h1>
-        <div className="schedule-container">
-            <div
-            draggable="false"
-            onMouseDown={handleMouseDown}
-            onMouseUp = {handleMouseUp}
-            className="schedule">
-                {createSchedule(activeTimeblocks, days, times)}
+        <div className="schedule-wrapper">
+            <h1 className="schedule-title">{title}</h1>
+            <div className="schedule-container">
+                <div
+                draggable="false"
+                onMouseDown={handleMouseDown}
+                onMouseUp = {handleMouseUp}
+                className="schedule">
+                    {createSchedule(activeTimeblocks, days, times)}
+                </div>
+                <Selector 
+                activeStates={activeStates}
+                setActiveStates={setActiveStates}
+                setActiveState={setActiveState}/>
             </div>
-            <Selector 
-            activeStates={activeStates}
-            setActiveStates={setActiveStates}
-            setActiveState={setActiveState}/>
         </div>
         </>
     )
