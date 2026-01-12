@@ -1,12 +1,29 @@
-.schedule-column:after {
-    clear: both;
-    content: '';
+.schedule-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    flex-grow: 1;
 }
 
 .schedule {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    --block-height: 60px;
+    --block-width: 120px;
+    --timeblock-height: 15px;
+}
+
+.schedule-column:after {
+    clear: both;
+    content: '';
+}
+
+
+.schedule-title {
+    text-align: center;
 }
 
 .schedule-container {
@@ -18,12 +35,13 @@
 
 .titleblock {
     box-sizing: border-box;
-    display:flex;
+    display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
 
-    width: 100px;
-    height: 40px;
+    width: var(--block-width);
+    height: var(--block-height);
     background-color: var(--background-color-glass);
     color: var(--font-color);
     border: 1px solid black;
@@ -32,8 +50,8 @@
 
 .emptyblock {
     box-sizing: border-box;
-    width: 100px;
-    height: 40px;
+    width: var(--block-width);
+    height: var(--block-height);
     border: none;
 }
 

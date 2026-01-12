@@ -3,22 +3,14 @@ import Timeblock from './Timeblock.tsx'
 import Selector from './Selector.tsx'
 import State from './state.ts';
 import './Schedule.css'
+import { getTimeRange } from '../utils.ts'
+import { useSearchParams } from "react-router"
+import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
+import { useDateFormatter } from 'react-aria';
 
-
-/**
- * Convert a 24 hour integer to a formatted 12 hour string 
- * @param hour - the exact integer hour in 24 hour format
- * @returns the time in 12 hour format (e.g. 12:00 pm)
- */
-
-function getHour(hour: number) {
-    let h = hour % 24;
-
-    // if hour is less than 12 it is morning, else it is pm
-    let morningOrAfternoon: string = (h < 12) ? "am" : "pm";
-
-    // return the hour corresponding to the am or pm 
-    return `${(h % 12) ? (h % 12) : 12}:00 ${morningOrAfternoon}`;
+type TimeRange = {
+    start: CalendarDate,
+    end: CalendarDate,
 }
 
 /**
@@ -61,27 +53,42 @@ function initialize2DArray(columns: number, rows: number, value: any="") {
     return [...Array(columns)].map(_element => Array(rows).fill(value));
 }
 
-/**
- * Generate a range of times in 12 hour format (e.g. 12:00 pm) between the starting hour (inclusive) and ending hour (inclusive)
- * @param startHour - the beginning hour of the time range, in 24 hour integer form
- * @param endHour - the final hour of the time range, in 24 hour integer form
- * @returns an array of 12 hour formatted times between the starting hour and final hour
- */
-function getTimeRange(startHour: number, endHour: number) {
-    let timeRange: Array<string> = Array(endHour - startHour + 1);
-
-    for (let i = 0; i <= endHour - startHour; i++) {
-        timeRange[i] = getHour(startHour + i);
-    }
-
-    return timeRange;
-}
-
 function Schedule() {
+    const [searchParams, _setSearchParams] = useSearchParams();
+
+    const [title, _setTitle] = useState(searchParams.get("name"));
+
     // initialize the days and times (in 12 hour format) that the schedule spans
     // TODO: add feature to specify these by the user
-    const [days, _setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-    const [times, _setTimes] = useState(getTimeRange(9, 24));
+    const startDate = searchParams.get("sDay")
+    const endDate = searchParams.get("eDay")
+    const range: TimeRange = {
+        start: parseDate(startDate? startDate : ""),
+        end: parseDate(endDate? endDate : "")
+    };
+
+    const formatter = useDateFormatter({ month: 'long', weekday: 'long', day: 'numeric' });
+
+    function makeDays(range: TimeRange) {
+        const dates = [];
+        let currentDate: CalendarDate = range.start;
+        let i = 0; // prevent infinite loops by having maximum loop limit
+        // .compare() < 0 returns true if the first date is before the second
+        while (currentDate.compare(range.end) <= 0 && i <= 20) {
+            i++;
+            const currentDateStr = formatter.format(currentDate.toDate(getLocalTimeZone()))
+            dates.push(currentDateStr);
+            currentDate = currentDate.add({days: 1});
+        }
+    
+        return dates;
+    }
+
+    //const [days, _setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+    const [days, _setDays] = useState(makeDays(range));
+    const startTime = Number(searchParams.get("sTime"));
+    const endTime = Number(searchParams.get("eTime"));
+    const [times, _setTimes] = useState(getTimeRange(startTime, endTime));
 
     // an array of the possible states that a Timeblock may take
     // TODO: add feature to specify these by the user
@@ -207,7 +214,7 @@ function Schedule() {
         return (
             <>
             <div className="schedule-column no-drag">
-            <div className="emptyblock"></div>
+                <div className="emptyblock"></div>
                 {times.map((time, index) => {
                     return <div key={`${time}${index}`} className="titleblock">{time}</div>
                 })}
@@ -231,18 +238,21 @@ function Schedule() {
 
     return (
         <>
-        <div className="schedule-container">
-            <div
-            draggable="false"
-            onMouseDown={handleMouseDown}
-            onMouseUp = {handleMouseUp}
-            className="schedule">
-                {createSchedule(activeTimeblocks, days, times)}
+        <div className="schedule-wrapper">
+            <h1 className="schedule-title">{title}</h1>
+            <div className="schedule-container">
+                <div
+                draggable="false"
+                onMouseDown={handleMouseDown}
+                onMouseUp = {handleMouseUp}
+                className="schedule">
+                    {createSchedule(activeTimeblocks, days, times)}
+                </div>
+                <Selector 
+                activeStates={activeStates}
+                setActiveStates={setActiveStates}
+                setActiveState={setActiveState}/>
             </div>
-            <Selector 
-            activeStates={activeStates}
-            setActiveStates={setActiveStates}
-            setActiveState={setActiveState}/>
         </div>
         </>
     )

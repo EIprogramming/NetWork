@@ -1,4 +1,3 @@
-//import { useState } from 'react'
 import ColorPicker from './ColorPicker';
 import './Selector.css'
 import SelectorButton from './SelectorButton';
@@ -11,7 +10,6 @@ interface Props {
 }
 
 function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
-
     function removeActiveState(activeState: State) {
         let nextActiveStates = structuredClone(activeStates);
         let stateIndex: number = -1;
