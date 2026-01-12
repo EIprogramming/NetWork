@@ -94,7 +94,6 @@ function Schedule() {
     const [times, _setTimes] = useState(getTimeRange(startTime, endTime));
 
     // an array of the possible states that a Timeblock may take
-    // TODO: add feature to specify these by the user
     const unavailableState = new State("Unavailable", "rgba(255, 200, 200, 1)", true);
     const unsureState = new State("Unsure", "rgba(255, 255, 200, 1)", true);
     const availableState = new State("Available", "rgba(200, 255, 200, 1)", true);
@@ -204,17 +203,6 @@ function Schedule() {
      * @returns the schedule in React component format
      */
     function createSchedule(schedule: Array<Array<State>>, days: Array<string>, times: Array<string>) {
-        /* creates a schedule based on a two-dimensional array
-            of the form:
-            <div className="schedule-column">
-            <Timeblock />
-            ... 
-            <Timeblock />
-            </div>
-            ...
-            <div className="schedule-column">...</div>
-        */
-
         return (
             <>
             <div className="schedule-column no-drag">

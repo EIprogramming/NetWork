@@ -1,4 +1,5 @@
 //import {useRef, useState } from 'react'
+import { useRef } from 'react';
 import State from './state';
 import './Timeblock.css'
 
@@ -18,6 +19,9 @@ function Timeblock( {col, row, value, handleSelected} : Props) {
     //function _getBackgroundColor() {
     //    return value.color;
     //}
+    const focusCol = useRef(0);
+    const focusRow = useRef(0);
+    const isFocused = useRef(false);
 
     function handleClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) { handleMouseDown(e) }
 
@@ -46,11 +50,38 @@ function Timeblock( {col, row, value, handleSelected} : Props) {
             return "1px solid black";
         }
     }
+
+    function isFirstGridElem() {
+        return (col === focusCol.current && row === focusRow.current);
+    }
+
+    function setIsFocused(value: boolean) {
+        isFocused.current = value;
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        switch (e.key) {
+            case "enter":
+                // TODO: add arrow key functionality on grid
+                break;
+            case "ArrowUp":
+                break;
+            case "ArrowDown":
+                break;
+            default:
+                break;
+        }
+    }
+
     /*TODO: ADD ACCESSIBLE GRID BY ARROW KEYS */
     return (
         <div
+        tabIndex={isFirstGridElem() ? 0 : -1}
         className="timeblock no-drag"
         id={`C${col} R${row}`}
+        onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         onMouseDown={(e) => handleMouseDown(e)}
         onClick={(e) => handleClick(e)}
         onMouseEnter={(e) => handleMouseEnter(e)}
