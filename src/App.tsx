@@ -7,7 +7,6 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router'
 function App() {
 
   return (
-    <>
     <BrowserRouter>
       <div className="app">
         <header className="header">
@@ -25,8 +24,7 @@ function App() {
         <footer className="footer"></footer>
       </div>
     </BrowserRouter>
-    </>
-  )
+  );
 }
 
 export default App

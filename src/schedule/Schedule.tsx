@@ -22,7 +22,7 @@ type TimeRange = {
  */
 function editArrayRegion(
     firstElement: Array<number>, lastElement: Array<number>,
-    array: Array<Array<State>>, value: State) {
+    array: Array<Array<State>>, value: State, valueModified: State, defaultValue: State) {
     
     // default behaviour if one of the elements is 'outside' the schedule
     if (firstElement[0] === -1 || lastElement[0] === -1) return;
@@ -37,7 +37,10 @@ function editArrayRegion(
     // go through each element on the rectangle and modify it to the desired value
     for (let i = coli; i <= colf; i++) {
         for (let j = rowi; j <= rowf; j++) {
-            array[i][j] = value;
+            let state: State = array[i][j];
+            if (value.name !== defaultValue.name || state.name === valueModified.name) {
+                array[i][j] = value;
+            }
         }
     }
 }
@@ -96,9 +99,9 @@ function Schedule() {
     const unsureState = new State("Unsure", "rgba(255, 255, 200, 1)", true);
     const availableState = new State("Available", "rgba(200, 255, 200, 1)", true);
 
-    const [activeStates, setActiveStates] = useState([unavailableState, unsureState, availableState]);
-    const [activeState, setActiveState] = useState(activeStates[1]); // current state being applied
-    const defaultState = useRef(activeStates[0]); // state to apply if deselecting current state
+    const [activeStates, setActiveStates] = useState([availableState, unsureState, unavailableState]);
+    const [activeState, setActiveState] = useState(availableState); // current state being applied
+    const defaultState = useRef(unavailableState); // state to apply if deselecting current state
 
     // isApplyingValue keeps track of whether activeState is being applied (true) or defaultState (false)
     const [isApplyingValue, setIsApplyingValue] = useState(false);
@@ -145,14 +148,14 @@ function Schedule() {
         let nextLastElement = lastElement;
 
         if (isFirstElement) {
-            // if this is the first element selected, determine if we are
-            // toggling elements to become active or inactive
-            nextIsApplyingValue = !(activeTimeblocks[col][row] == activeState);
-            setIsApplyingValue(nextIsApplyingValue)
-
             // update the current 'first element' that was selected
             nextFirstElement = [col, row];
             setFirstElement(nextFirstElement);
+            
+            // if this is the first element selected, determine if we are
+            // toggling elements to become active or inactive
+            nextIsApplyingValue = !(activeTimeblocks[col][row].name === activeState.name);
+            setIsApplyingValue(nextIsApplyingValue)
 
             // save a copy of the old schedule in case the selection size changes
             nextPrevActiveTimeblocks = activeTimeblocks;
@@ -170,7 +173,8 @@ function Schedule() {
         // apply changes to old schedule and then make them into the new schedule
         if (nextIsApplyingValue) { state = activeState; }
         else { state = defaultState.current }
-        editArrayRegion(nextFirstElement, nextLastElement, nextActiveTimeBlocks, state);
+        editArrayRegion(nextFirstElement, nextLastElement, nextActiveTimeBlocks,
+            state, activeState, defaultState.current);
         setActiveTimeblocks(nextActiveTimeBlocks);
     }
     
@@ -237,7 +241,6 @@ function Schedule() {
     }
 
     return (
-        <>
         <div className="schedule-wrapper">
             <h1 className="schedule-title">{title}</h1>
             <div className="schedule-container">
@@ -254,8 +257,7 @@ function Schedule() {
                 setActiveState={setActiveState}/>
             </div>
         </div>
-        </>
-    )
+    );
 }
 
 export default Schedule

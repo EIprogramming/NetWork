@@ -48,20 +48,18 @@ function Timeblock( {col, row, value, handleSelected} : Props) {
     }
     /*TODO: ADD ACCESSIBLE GRID BY ARROW KEYS */
     return (
-        <>
-            <div
-            className="timeblock no-drag"
-            id={`C${col} R${row}`}
-            onMouseDown={(e) => handleMouseDown(e)}
-            onClick={(e) => handleClick(e)}
-            onMouseEnter={(e) => handleMouseEnter(e)}
-            style={{
-                "backgroundColor": value.color,
-                borderRight: "1px solid black",
-                borderBottom: getBorderBottom(),
-            }}></div>
-        </>
-    )
+        <div
+        className="timeblock no-drag"
+        id={`C${col} R${row}`}
+        onMouseDown={(e) => handleMouseDown(e)}
+        onClick={(e) => handleClick(e)}
+        onMouseEnter={(e) => handleMouseEnter(e)}
+        style={{
+            "backgroundColor": value.color,
+            borderRight: "1px solid black",
+            borderBottom: getBorderBottom(),
+        }}></div>
+    );
 }
 
 export default Timeblock

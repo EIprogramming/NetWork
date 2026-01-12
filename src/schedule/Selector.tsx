@@ -32,35 +32,40 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
         setActiveStates(nextActiveStates);
     }
 
+     // hardcoded for now, TODO: make this dynamic for future changes.
+    function isDefaultSelected(activeState: State) { return activeState.name === "Available"; }
+
     function createSelectors() {
         return (
             <>
             {activeStates.map((activeState, index)  => {
                 // generate unique label for the input box based on activeState and index, for example: available0, unavailable1
                 const label: string = `${activeState.name}${index}`;
-                return <>
-                    <div key={`div-${label}`} className="selector-list-element">
-                    <input key={label} onChange={() => setActiveState(activeState)} type="radio" className="selector" name="selector" id={label} />
-                    <label htmlFor={label}>{activeState.name}</label>
-                    <span className="selector-spacer"></span>
-                    <ColorPicker
-                        color={activeState.color}
-                        setColor={(color) => {setStateColor(activeState, color)}}
-                        isDefault={activeState.isDefault}
-                        tabIndex={activeState.isDefault? -1 : 0} />
-                    { activeState.isDefault ?
-                        <div className="selector-trash"></div>
-                        : <button key={`selector-trash-${label}`}className="selector-trash"
-                            onClick={() => removeActiveState(activeState)}>T</button>}
-                </div>
-                </>
+                if (activeState.name == "Unavailable") {return null;}
+                return (
+                    <div key={`${label}`} className="selector-list-element">
+                        <input type="radio" id={label} className="selector" name="selector"
+                        onChange={() => setActiveState(activeState)}
+                        defaultChecked={isDefaultSelected(activeState)}/>
+                        <label htmlFor={label}>{activeState.name}</label>
+                        <span className="selector-spacer"></span>
+                        {<ColorPicker
+                            color={activeState.color}
+                            setColor={(color) => {setStateColor(activeState, color)}}
+                            isDefault={activeState.isDefault}
+                            tabIndex={activeState.isDefault? -1 : 0} />}
+                        { activeState.isDefault ?
+                            <div className="selector-trash"></div>
+                            :
+                            <button className="selector-trash"
+                                onClick={() => removeActiveState(activeState)}>T</button>}
+                    </div>);
             })}
             </>
         )
     }
 
     return (
-        <>
         <div className="selector-container">
             <h2 className="selector-title">Select Modifier</h2>
             <div className="selector-title"></div>
@@ -69,8 +74,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
             activeStates={activeStates}
             setActiveStates={setActiveStates} />
         </div>
-        </>
-    )    
+    );
 }
 
 export default Selector
