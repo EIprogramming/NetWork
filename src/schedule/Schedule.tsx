@@ -1,12 +1,13 @@
-import { useRef, useState } from 'react'
-import Timeblock from './Timeblock.tsx'
-import Selector from './Selector.tsx'
+import { useRef, useState } from 'react';
+import Timeblock from './Timeblock.tsx';
+import Selector from './Selector.tsx';
 import State from './state.ts';
-import './Schedule.css'
-import { getTimeRange } from '../utils.ts'
-import { useSearchParams } from "react-router"
+import './Schedule.css';
+import { getTimeRange } from '../utils.ts';
+import { useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
+import type Coordinate from './coordinate.ts';
 
 type TimeRange = {
     start: CalendarDate,
@@ -117,6 +118,9 @@ function Schedule() {
     const [firstElement, setFirstElement] = useState([-1, -1]);
     const [lastElement, setLastElement] = useState([-1, -1]);
 
+    // Accessibility Feature: tabindex focused element //
+    const [focusedElement, setFocusedElement] = useState<Coordinate>( {col: 0, row: 0} );
+
     /**
      * Get exact day and time of a specific Timeblock
      * @param col - the column number of the Timeblock component
@@ -220,7 +224,9 @@ function Schedule() {
                         key={`C${colNum}R${rowNum}`}
                         col={colNum} row={rowNum}
                         value={activeTimeblocks[colNum][rowNum]}
-                        handleSelected={handleTimeblockSelected}/>
+                        handleSelected={handleTimeblockSelected}
+                        focusedElement={focusedElement}
+                        setFocusedElement={setFocusedElement}/>
                     })}
                 </div>)
             })}
@@ -236,7 +242,8 @@ function Schedule() {
                 draggable="false"
                 onMouseDown={handleMouseDown}
                 onMouseUp = {handleMouseUp}
-                className="schedule">
+                className="schedule"
+                role="grid">
                     {createSchedule(activeTimeblocks, days, times)}
                 </div>
                 <Selector 
