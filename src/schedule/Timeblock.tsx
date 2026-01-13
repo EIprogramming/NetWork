@@ -1,18 +1,23 @@
 import { useLayoutEffect, useRef } from 'react';
 import State from './state';
-import './Timeblock.css'
-import type Coordinate from './coordinate.ts'
+import './Timeblock.css';
+import type Coordinate from './coordinate.ts';
 
 interface Props {
     col: number,
     row: number,
     value: State,
+    ariaLabel: string,
     handleSelected: (col: number, row: number, isFirstElement: boolean) => void,
     focusedElement: {col: number, row: number},
-    setFocusedElement: React.Dispatch<React.SetStateAction<Coordinate>>
+    setFocusedElement: React.Dispatch<React.SetStateAction<Coordinate>>,
+    gridIsFocused: boolean
+    setGridIsFocused: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function Timeblock( {col, row, value, handleSelected, focusedElement, setFocusedElement} : Props) {
+function Timeblock( { col, row, value, ariaLabel,
+        handleSelected, focusedElement, setFocusedElement,
+        gridIsFocused, setGridIsFocused } : Props) {
     /*
      * TODO: REMOVE THIS FUNCTION IF NOT NECESSARY
      * Gets the background colour of the Timeblock component based on its `value`
@@ -51,12 +56,14 @@ function Timeblock( {col, row, value, handleSelected, focusedElement, setFocused
         }
     }
 
-    function isFirstGridElem() {
-        return (col === focusedElement.col && row === focusedElement.row);
+    function getBorderLeft() {
+        if (col === 0) { return "1px solid black"; }
+        return "";
     }
 
-    function setIsFocused(value: boolean) {
-        isFocused.current = value;
+    function setIsFocused(isCurrentFocus: boolean) {
+        isFocused.current = isCurrentFocus;
+        if (isCurrentFocus && !gridIsFocused) setGridIsFocused(true);
     }
 
     const refs = useRef<(HTMLDivElement | null)[][]>([]);
@@ -64,6 +71,7 @@ function Timeblock( {col, row, value, handleSelected, focusedElement, setFocused
     // TODO: MOVE THIS INTO THE PARENT SCHEDULE
     function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
         if (!e.key.startsWith("Arrow")) return;
+        console.log("helo?", e.key);
         const column = focusedElement.col;
         const row = focusedElement.row;
         let nextFocusedElement = null;
@@ -91,26 +99,35 @@ function Timeblock( {col, row, value, handleSelected, focusedElement, setFocused
             default:
                 break;
         }
+        e.preventDefault();
         
         //if (nextFocusedElement && isFocused.current) {
         //    console.log("happened!")
         //    refs.current[nextFocusedElement.row]?.[nextFocusedElement.col]?.focus();
         //}
         
-        e.preventDefault();
     }
 
     // TODO: change all logic to parent
     useLayoutEffect(() => {
-        if (!isFocused.current) return;
+        if (!isFocused.current && !gridIsFocused) return;
         refs.current[focusedElement.row]?.[focusedElement.col]?.focus();
     }, [focusedElement]);
+
+    function isFocusable() {
+        if (col === 0 && row === 0 && !gridIsFocused) return 0;
+        if (col === focusedElement.col && row === focusedElement.row && gridIsFocused) {
+            return 0;
+        }
+        return -1;
+    }
 
     /*TODO: ADD ACCESSIBLE GRID BY ARROW KEYS */
     return (
         <div
+        aria-label={ariaLabel}
         role="gridcell"
-        tabIndex={isFirstGridElem() ? 0 : 0}
+        tabIndex={isFocusable()}
         className="timeblock no-drag"
         id={`C${col} R${row}`}
         onKeyDown={handleKeyDown}
@@ -123,10 +140,12 @@ function Timeblock( {col, row, value, handleSelected, focusedElement, setFocused
             if (!refs.current[row]) refs.current[row] = [];
             if (element) refs.current[row][col] = element;
         }}
-        style={{
+        style={{ /*TODO: MAKE A GENERIC BORDER FUNCTION */
             "backgroundColor": value.color,
+            borderTop: row === 0 ? "1px solid black" : "",
             borderRight: "1px solid black",
             borderBottom: getBorderBottom(),
+            borderLeft: getBorderLeft()
         }}></div>
     );
 }
