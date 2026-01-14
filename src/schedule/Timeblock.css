@@ -7,5 +7,6 @@
 
 .timeblock:focus {
     z-index: 1;
+    outline-offset: -1px;
 }
 

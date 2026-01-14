@@ -3,7 +3,7 @@ import Timeblock from './Timeblock.tsx';
 import Selector from './Selector.tsx';
 import State from './state.ts';
 import './Schedule.css';
-import { getTimeRange } from '../utils.ts';
+import { editArrayRegion, getTimeRange, initialize2DArray } from '../utils.ts';
 import { useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
@@ -12,49 +12,6 @@ import Coordinate from './coordinate.ts';
 type TimeRange = {
     start: CalendarDate,
     end: CalendarDate,
-}
-
-/**
- * Edits an array in a rectangular section between two corners (firstElement) and (lastElement)
- * @param firstElement - coordinates of the first corner of the array in [col, row] format
- * @param lastElement - coordinates of the second corner of the array in [col, row] format
- * @param array - the array to be *modified*
- * @param value - the value to fill this rectangle with
- */
-function editArrayRegion(
-    firstElement: Array<number>, lastElement: Array<number>,
-    array: Array<Array<State>>, value: State, valueModified: State, defaultValue: State) {
-    
-    // default behaviour if one of the elements is 'outside' the schedule
-    if (firstElement[0] === -1 || lastElement[0] === -1) return;
-
-    let [coli, rowi] = firstElement;
-    let [colf, rowf] = lastElement;
-
-    // swap final / initial values for row if the final is greater than initial
-    if (rowf < rowi) {[rowi, rowf] = [rowf, rowi]}
-    if (colf < coli) {[coli, colf] = [colf, coli]}
-
-    // go through each element on the rectangle and modify it to the desired value
-    for (let i = coli; i <= colf; i++) {
-        for (let j = rowi; j <= rowf; j++) {
-            let state: State = array[i][j];
-            if (value.name !== defaultValue.name || state.name === valueModified.name) {
-                array[i][j] = value;
-            }
-        }
-    }
-}
-
-/**
- * Initializes a 2D array filled with a default value.
- * @param columns - The number of columns in the array.
- * @param rows - The number of rows in the array.
- * @param value - the value to be filled, default is false
- * @returns 2D array filled with a default value..
- */
-function initialize2DArray(columns: number, rows: number, value: any="") {
-    return [...Array(columns)].map(_element => Array(rows).fill(value));
 }
 
 function Schedule() {
@@ -243,6 +200,11 @@ function Schedule() {
         e.preventDefault();
     }
 
+    /**
+     * move the focus along the arrow keys by calling moveFocus() and
+     * handle enterring time via pressing enter
+     * @param e - keyboard event from keydown
+     */
     function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
         if (e.key.startsWith("Arrow")) {
             moveFocus(e);
@@ -250,19 +212,25 @@ function Schedule() {
             if (firstElement[0] === -1 && firstElement[1] === -1) {
                 handleTimeblockSelected(focusedElement.col, focusedElement.row, true);
             } else {
+                // by saving the current selection, 'escapes' out of availability entry mode
                 setOldActiveTimeblocks(activeTimeblocks);
                 setFirstElement([-1, -1]);
             }
         }
     }
 
+    /** Updates the focus on the timeblock on a DOM mutation,
+     *  and prevents autofocus on page load by checking !gridIsFocused and !timeblockRefs
+     */
     useLayoutEffect(() => {
+        // make sure the grid is already focused and the reference list exists
         if (!gridIsFocused || !timeblockRefs) return;
+
         const col = focusedElement.col;
         const row = focusedElement.row;
-
         const focusedTimeblock = timeblockRefs.current[row][col];
         if (!focusedTimeblock) return;
+
         focusedTimeblock.focus();
     }, [focusedElement]);
 
