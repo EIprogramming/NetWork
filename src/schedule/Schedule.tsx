@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import Timeblock from './Timeblock.tsx';
 import Selector from './Selector.tsx';
 import State from './state.ts';
@@ -7,7 +7,7 @@ import { getTimeRange } from '../utils.ts';
 import { useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
-import type Coordinate from './coordinate.ts';
+import Coordinate from './coordinate.ts';
 
 type TimeRange = {
     start: CalendarDate,
@@ -118,10 +118,6 @@ function Schedule() {
     const [firstElement, setFirstElement] = useState([-1, -1]);
     const [lastElement, setLastElement] = useState([-1, -1]);
 
-    // Accessibility Feature: tabindex focused element //
-    const [focusedElement, setFocusedElement] = useState<Coordinate>( {col: 0, row: 0} );
-    const [gridIsFocused, setGridIsFocused] = useState(false);
-
     /**
      * Get aria label of a specific Timeblock
      * @param col - the column number of the Timeblock component
@@ -190,17 +186,89 @@ function Schedule() {
             state, activeState, defaultState.current);
         setActiveTimeblocks(nextActiveTimeBlocks);
     }
-    
-    function handleMouseDown(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        if (e.buttons % 2) {
-            
-        }
-    }
 
     function handleMouseUp(_e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         setFirstElement([-1, -1]);
         setLastElement([-1, -1]);
     }
+
+    /* =========================================================================== */
+    /* ============= accessibility management for tabulated controls ============= */
+    /* =========================================================================== */
+
+    const [gridIsFocused, setGridIsFocused] = useState(false);
+    const [focusedElement, setFocusedElement] = useState<Coordinate>( { col: 0, row: 0} );
+    const timeblockRefs = useRef<(HTMLDivElement | null)[][]>([]);
+
+    function getFocusIndex(colIndex: number, rowIndex: number) {
+        if (focusedElement.col === colIndex && focusedElement.row === rowIndex) return 0;
+        return -1;
+    }
+
+    function moveFocus(e: React.KeyboardEvent<HTMLDivElement>) {
+        const column = focusedElement.col;
+        const maxColumn = activeTimeblocks.length - 1;
+        const row = focusedElement.row;
+        const maxRow = activeTimeblocks[0].length - 1;
+        let nextFocusedElement = null;
+
+        switch (e.key) {
+            case "ArrowUp":
+                if (row === 0) { nextFocusedElement = {col: column, row: maxRow}; }
+                else { nextFocusedElement = {col: column, row: row - 1}; }
+                setFocusedElement(nextFocusedElement);
+                console.log(nextFocusedElement.col, nextFocusedElement.row)
+                break;
+            case "ArrowDown":
+                if (row === maxRow) { nextFocusedElement = {col: column, row: 0}; }
+                else { nextFocusedElement = {col: column, row: row + 1}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            case "ArrowLeft":
+                if (column === 0) { nextFocusedElement = {col: maxColumn, row: row}; }
+                else { nextFocusedElement = {col: column - 1, row: row}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            case "ArrowRight":
+                if (column === maxColumn) { nextFocusedElement = {col: 0, row: row}; }
+                else { nextFocusedElement = {col: column + 1, row: row}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            default:
+                break;
+        }
+        
+        
+        if (nextFocusedElement) handleTimeblockSelected(nextFocusedElement.col, nextFocusedElement.row, false);
+        e.preventDefault();
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        if (e.key.startsWith("Arrow")) {
+            moveFocus(e);
+        } else if (e.key === "Enter") {
+            if (firstElement[0] === -1 && firstElement[1] === -1) {
+                handleTimeblockSelected(focusedElement.col, focusedElement.row, true);
+            } else {
+                setOldActiveTimeblocks(activeTimeblocks);
+                setFirstElement([-1, -1]);
+            }
+        }
+    }
+
+    useLayoutEffect(() => {
+        if (!gridIsFocused || !timeblockRefs) return;
+        const col = focusedElement.col;
+        const row = focusedElement.row;
+
+        const focusedTimeblock = timeblockRefs.current[row][col];
+        if (!focusedTimeblock) return;
+        focusedTimeblock.focus();
+    }, [focusedElement]);
+
+    /* =========================================================================== */
+    /* ======================= react component generation ======================== */
+    /* =========================================================================== */
 
     /**
      * Generates React components based on the schedule array of the form:\n
@@ -236,10 +304,8 @@ function Schedule() {
                         value={activeTimeblocks[colNum][rowNum]}
                         ariaLabel={getTimeblockLabel(colNum, rowNum)}
                         handleSelected={handleTimeblockSelected}
-                        focusedElement={focusedElement}
-                        setFocusedElement={setFocusedElement}
-                        gridIsFocused={gridIsFocused}
-                        setGridIsFocused={setGridIsFocused}/>
+                        focusIndex={getFocusIndex(colNum, rowNum)}
+                        refs={timeblockRefs} />
                     })}
                 </div>)
             })}
@@ -253,8 +319,10 @@ function Schedule() {
             <div className="schedule-container">
                 <div
                 draggable="false"
-                onMouseDown={handleMouseDown}
                 onMouseUp = {handleMouseUp}
+                onKeyDown= {handleKeyDown}
+                onFocus={() => setGridIsFocused(true)}
+                onBlur={() => setGridIsFocused(false)}
                 className="schedule"
                 role="grid">
                     {createSchedule(activeTimeblocks, days, times)}
