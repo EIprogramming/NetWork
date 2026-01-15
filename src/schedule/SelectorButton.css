@@ -45,6 +45,12 @@
 }
 
 .selector-form-color {
-    margin-right: 1rem;
+    margin: 0 1rem;
     background-color: white;
+}
+
+
+.selector-form-color:hover {
+    cursor: pointer;
+    z-index: 1;
 }

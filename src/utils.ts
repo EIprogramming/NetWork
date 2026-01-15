@@ -25,7 +25,11 @@ export function editArrayRegion(
     for (let i = coli; i <= colf; i++) {
         for (let j = rowi; j <= rowf; j++) {
             let state: State = array[i][j];
-            if (value.name !== defaultValue.name || state.name === valueModified.name) {
+            const isDefaultValue = value.name === defaultValue.name;
+            const isValueModified = state.name === valueModified.name;
+            const isApplyingDefaultValue = value.name === defaultValue.name && value.name === valueModified.name;
+
+            if (!isDefaultValue || isValueModified || isApplyingDefaultValue) {
                 array[i][j] = value;
             }
         }

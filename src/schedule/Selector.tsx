@@ -1,4 +1,4 @@
-import ColorPicker from './ColorPicker';
+import ColorSelect from './ColorSelect';
 import './Selector.css'
 import SelectorButton from './SelectorButton';
 import State from './state';
@@ -41,7 +41,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
             {activeStates.map((activeState, index)  => {
                 // generate unique label for the input box based on activeState and index, for example: available0, unavailable1
                 const label: string = `${activeState.name}${index}`;
-                if (activeState.name == "Unavailable") {return null;}
+                //if (activeState.name == "Unavailable") {return null;} // skip the unavailable state
                 return (
                     <div key={`${label}`} className="selector-list-element">
                         <input type="radio" id={label} className="selector" name="selector"
@@ -49,9 +49,16 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
                         defaultChecked={isDefaultSelected(activeState)}/>
                         <label htmlFor={label}>{activeState.name}</label>
                         <span className="selector-spacer"></span>
-                        {<ColorPicker
+                        {/*<ColorPicker
                             color={activeState.color}
                             setColor={(color) => {setStateColor(activeState, color)}}
+                            isDefault={activeState.isDefault}
+                            tabIndex={activeState.isDefault? -1 : 0} />*/}
+                        {<ColorSelect
+                            color={activeState.color}
+                            setColor={(color) => {setStateColor(activeState, color)}}
+                            state={activeState}
+                            setState={setActiveState}
                             isDefault={activeState.isDefault}
                             tabIndex={activeState.isDefault? -1 : 0} />}
                         { activeState.isDefault ?

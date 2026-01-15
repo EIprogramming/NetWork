@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
 import Coordinate from './coordinate.ts';
+import { DEFAULT_COLORS } from './defaultColors.ts';
 
 type TimeRange = {
     start: CalendarDate,
@@ -52,9 +53,9 @@ function Schedule() {
     const [times, _setTimes] = useState(getTimeRange(startTime, endTime));
 
     // an array of the possible states that a Timeblock may take
-    const unavailableState = new State("Unavailable", "rgba(255, 200, 200, 1)", true);
-    const unsureState = new State("Unsure", "rgba(255, 255, 200, 1)", true);
-    const availableState = new State("Available", "rgba(200, 255, 200, 1)", true);
+    const unavailableState = new State("Unavailable", DEFAULT_COLORS.white, true);
+    const unsureState = new State("Maybe", DEFAULT_COLORS.yellow, true); // todo: remove for final product
+    const availableState = new State("Available", DEFAULT_COLORS.green, true);
 
     const [activeStates, setActiveStates] = useState([availableState, unsureState, unavailableState]);
     const [activeState, setActiveState] = useState(availableState); // current state being applied

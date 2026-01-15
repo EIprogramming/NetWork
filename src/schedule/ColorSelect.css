@@ -1,0 +1,36 @@
+.color-select-parent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.color-select {
+    position: absolute !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rem;
+    border-radius: 1rem;
+    border: 2px solid var(--border-color);
+    height: 6rem;
+    padding: 1rem;
+    width: max-content;
+    background-color: var(--dark-background-color);
+}
+
+.color-select-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0.25rem 0; /*todo: fix margin inequality*/
+}
+
+.color-select-row>.selector-form-color {
+    margin: 0 0.25rem; /*todo: fix margin inequality*/
+}
+
+.color-select-separator {
+    flex-grow: 1;
+}
