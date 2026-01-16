@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type State from "./schedule/state";
 
 /**
@@ -77,4 +78,19 @@ export function getTimeRange(startHour: number, endHour: number) {
     }
 
     return timeRange;
+}
+
+export function useOutsideAlerter(ref: React.RefObject<HTMLDivElement | null>, callback: Function, deps: Array<any>) {
+    useEffect(() => {
+        // Function for click event
+        function handleOutsideClick(event: MouseEvent) {
+        if (ref.current && event.target instanceof Node && !ref.current.contains(event.target)) {
+            callback(event);
+            }
+        }
+
+        // Adding click event listener
+        document.addEventListener("click", handleOutsideClick);
+        return () => document.removeEventListener("click", handleOutsideClick);
+    }, [ref, deps]);
 }

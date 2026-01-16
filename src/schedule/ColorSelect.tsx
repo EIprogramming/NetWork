@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import './ColorSelect.css';
-import { COLORS } from './defaultColors.ts';
+import { COLORS } from './defaultColors.ts';
 import type State from "./state.ts";
+import { useOutsideAlerter } from '../utils.ts';
 
 interface Props {
     color: string,
@@ -58,16 +59,32 @@ function ColorPicker( {color, setColor, state, setState, isDefault, tabIndex } :
         </>);
     }
 
+    const colorSelect = useRef<HTMLDivElement>(null);
+    const colorSelectButton = useRef<HTMLButtonElement>(null);
+    const handleOutsideClick = useCallback((e: MouseEvent) => {
+        console.log(isDisplayColorPicker);
+        if (!e.target || !colorSelectButton.current) return;
+        // only close the color select window when it is open
+        // and not when it is being opened by pressing colorSelectButton
+        if (isDisplayColorPicker && e.target instanceof Node && !colorSelectButton.current.contains(e.target)) {
+            setIsDisplayColorPicker(false);
+        };
+    }, [isDisplayColorPicker, setIsDisplayColorPicker]);
+
+    useOutsideAlerter(colorSelect, handleOutsideClick, [isDisplayColorPicker, setIsDisplayColorPicker]);
+
     return (
         <>
             <div className="color-select-parent">
-            <button tabIndex={tabIndex} type="button"
+            {<button tabIndex={tabIndex} type="button"
             className="selector-form-element selector-form-color" onClick={displayColorPicker}
+            ref={colorSelectButton}
             style={{
                 backgroundColor: color,
-            }}/>
+            }}/>}
             {isDisplayColorPicker ?
-                <div className="color-select">
+                <div className="color-select"
+                ref={colorSelect}>
                     {generateColourOptions()}
                 </div>
                 : null}
