@@ -13,10 +13,6 @@ interface Props {
     tabIndex: number,
 }
 
-// ================================================================================= //
-// ======================== TODO: npm DELETE react-colorful ======================== //
-// ================================================================================= //
-
 function ColorPicker( {color, setColor, state, setState, isDefault, tabIndex } : Props ) {
     const [isDisplayColorPicker, setIsDisplayColorPicker] = useState(false);
 
