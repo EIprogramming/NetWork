@@ -1,7 +1,8 @@
 import ColorSelect from './ColorSelect';
-import './Selector.css'
+import './Selector.css';
 import SelectorButton from './SelectorButton';
 import State from './state';
+import trash from '../assets/icons/trash.svg';
 
 interface Props {
     activeStates: Array<State>,
@@ -62,10 +63,12 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
                             isDefault={activeState.isDefault}
                             tabIndex={activeState.isDefault? -1 : 0} />}
                         { activeState.isDefault ?
-                            <div className="selector-trash"></div>
+                            <div className="selector-trash-spacer"></div>
                             :
-                            <button className="selector-trash"
-                                onClick={() => removeActiveState(activeState)}>T</button>}
+                            <button className="selector-form-trash"
+                            onClick={() => removeActiveState(activeState)}>
+                                <img className="icon" src={trash}/>
+                            </button>}
                     </div>);
             })}
             </>

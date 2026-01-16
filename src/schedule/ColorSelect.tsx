@@ -21,7 +21,7 @@ function ColorPicker( {color, setColor, state, setState, isDefault, tabIndex } :
     const [isDisplayColorPicker, setIsDisplayColorPicker] = useState(false);
 
     function displayColorPicker() {
-        if (!isDefault) { setIsDisplayColorPicker(true); }
+        if (!isDefault) { setIsDisplayColorPicker(!isDisplayColorPicker); }
     }
 
     function setStateColor(rgb: string) {

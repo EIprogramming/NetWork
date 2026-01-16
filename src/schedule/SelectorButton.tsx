@@ -3,6 +3,9 @@ import { useState } from 'react';
 import './SelectorButton.css'
 import State from './state';
 import ColorSelect from './ColorSelect';
+import { COLORS } from './defaultColors';
+import trash from '../assets/icons/trash.svg';
+import plus from '../assets/icons/plus.svg';
 
 interface Props {
     activeStates: Array<State>,
@@ -11,7 +14,7 @@ interface Props {
 
 function Selector( { activeStates, setActiveStates } : Props ) {
     const [isButtonVisible, setIsButtonVisible] = useState(true);
-    const defaultColor = "#ffffff";
+    const defaultColor = COLORS.red;
     const [color, setColor] = useState(defaultColor);
 
     function includesStateName(states: Array<State>, name: string) {
@@ -55,17 +58,21 @@ function Selector( { activeStates, setActiveStates } : Props ) {
     }
 
     return (
-        <div className="selector-button">
+        <div className="selector-button-wrapper">
             {
             isButtonVisible ?
             <button onClick={() => setIsButtonVisible(false)} className="selector-add">Add your own status!</button>
             :
             <form onSubmit={(e) => handleSubmitNewState(e)} className="selector-form">
-                <button type="submit" className="selector-form-element selector-form-submit">P</button>
+                <button type="submit" className="selector-form-element selector-form-submit">
+                    <img className="icon" src={plus}/>
+                </button>
                 <input name="newState" className="selector-form-element selector-form-input" id="newState"
                     type="text" autoFocus autoComplete="off" />
                 <ColorSelect color={color} setColor={setColor} isDefault={false} tabIndex={0} />
-                <button type="button" className="selector-form-element selector-form-trash" onClick={() => setIsButtonVisible(true)}>T</button>
+                <button type="button" className="selector-form-element selector-form-trash" onClick={() => setIsButtonVisible(true)}>
+                    <img className="icon" src={trash}/>
+                </button>
             </form>
             }
         </div>

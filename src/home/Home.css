@@ -75,6 +75,10 @@
     color: var(--font-color-dark);
 }
 
+.react-aria-CalendarCell {
+    margin: 2.5px 0px !important; /* removes minor visual bug of changing margins on the changing calendar*/
+}
+
 .event-start-end-divider {
     height: 2rem;
 }
