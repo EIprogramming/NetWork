@@ -17,7 +17,7 @@ function App() {
           </header>
         <main className="content">
           <Routes>
-            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/schedule/*" element={<Schedule />} />
             <Route path="/" element={<Home />} />
           </Routes>
         </main>

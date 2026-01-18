@@ -65,7 +65,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
                         { activeState.isDefault ?
                             <div className="selector-trash-spacer"></div>
                             :
-                            <button className="selector-form-trash"
+                            <button className="selector-trash"
                             onClick={() => removeActiveState(activeState)}>
                                 <img className="icon" src={trash}/>
                             </button>}

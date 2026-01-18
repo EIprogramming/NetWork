@@ -1,10 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Timeblock from './Timeblock.tsx';
 import Selector from './Selector.tsx';
 import State from './state.ts';
 import './Schedule.css';
 import { editArrayRegion, getTimeRange, initialize2DArray } from '../utils.ts';
-import { useSearchParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
 import Coordinate from './coordinate.ts';
@@ -16,18 +16,22 @@ type TimeRange = {
 }
 
 function Schedule() {
-    const [searchParams, _setSearchParams] = useSearchParams();
+    // ===========================================================================
+    // BIG TODO - TO speed up user experience, load every param as a default param
+    // ===========================================================================
+    const [_searchParams, _setSearchParams] = useSearchParams();
 
-    const [title, _setTitle] = useState(searchParams.get("name"));
+    let  { "*": scheduleId } = useParams();
+    const [title, setTitle] = useState("");
 
     // initialize the days and times (in 12 hour format) that the schedule spans
     // TODO: add feature to specify these by the user
-    const startDate = searchParams.get("sDay")
-    const endDate = searchParams.get("eDay")
-    const range: TimeRange = {
+    const startDate = "1969-07-12"; // no really needed at all, except as defaults
+    const endDate = "1969-07-11"; // todo: add validation for these values and remove the default
+    const [range, setRange] = useState<TimeRange>({
         start: parseDate(startDate? startDate : ""),
         end: parseDate(endDate? endDate : "")
-    };
+    });
 
     const formatter = useDateFormatter({ month: 'long', weekday: 'long', day: 'numeric' });
 
@@ -46,11 +50,48 @@ function Schedule() {
         return dates;
     }
 
-    //const [days, _setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-    const [days, _setDays] = useState(makeDays(range));
-    const startTime = Number(searchParams.get("sTime"));
-    const endTime = Number(searchParams.get("eTime"));
-    const [times, _setTimes] = useState(getTimeRange(startTime, endTime));
+    const [days, setDays] = useState(makeDays(range));
+    const [startTime, setStartTime] = useState(0);
+    const [endTime, setEndTime] = useState(-1);
+    const [times, setTimes] = useState(getTimeRange(startTime, endTime));
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/schedule/?id=${scheduleId}`);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+                const result = await response.json();
+                setTitle(result.title);
+
+                const nextRange: TimeRange = {start: parseDate(result.start_day), end: parseDate(result.end_day)};
+                setRange(nextRange);
+
+                const nextDays = makeDays(nextRange);
+                setDays(nextDays);
+
+                const nextStartTime = result.start_time;
+                const nextEndTime = result.end_time;
+                setStartTime(result.start_time);
+                setEndTime(result.end_time);
+
+                const nextTimes = getTimeRange(nextStartTime, nextEndTime);
+                setTimes(nextTimes);
+
+                setActiveTimeblocks(initialize2DArray(nextDays.length, 4*nextTimes.length, unavailableState));
+                setOldActiveTimeblocks(initialize2DArray(nextDays.length, 4*nextTimes.length, unavailableState));
+
+            } catch (err) {
+                // todo: make error
+                //setError(err.message);
+            } finally {
+                // todo: make loading
+                //setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, []);
 
     // an array of the possible states that a Timeblock may take
     const unavailableState = new State("Unavailable", DEFAULT_COLORS.white, true);
@@ -282,8 +323,9 @@ function Schedule() {
         )
     }
 
-    return (
-        <div className="schedule-wrapper">
+    return (<>
+        {/*Load schedule if title is not empty*/}
+        {title? <div className="schedule-wrapper">
             <h1 className="schedule-title">{title}</h1>
             <div className="schedule-container">
                 <div
@@ -296,12 +338,15 @@ function Schedule() {
                 role="grid">
                     {createSchedule(activeTimeblocks, days, times)}
                 </div>
+
                 <Selector 
                 activeStates={activeStates}
                 setActiveStates={setActiveStates}
                 setActiveState={setActiveState}/>
-            </div>
-        </div>
+                </div>
+            </div> : null}
+        </>
+        
     );
 }
 

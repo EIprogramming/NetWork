@@ -24,10 +24,25 @@ function Home() {
 
     function createSchedule(formData: FormData) {
         if (range === null) return;
-        const eventTitle = formData.get("event-title");
+        const title = formData.get("event-title");
+        const startDay = range.start.toString();
+        const endDay = range.end.toString();
         const startTime = formStartTime.current;
         const endTime = formEndTime.current;
-        navigate(`/schedule?name=${eventTitle}&sDay=${range.start}&eDay=${range.end}&sTime=${startTime}&eTime=${endTime}`);
+        fetch("http://localhost:3000/schedule", {
+            method: "POST",
+            body: JSON.stringify({
+                "title": title,
+                "startDay": startDay,
+                "endDay": endDay,
+                "startTime": startTime,
+                "endTime": endTime
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        }).then((response) => response.json()).then((json) => navigate(`/schedule/${json.public_id}`));
+        //navigate(`/schedule?name=${title}&sDay=${range.start}&eDay=${range.end}&sTime=${startTime}&eTime=${endTime}`);
     }
 
     function checkIsFormValid(formRange: TimeRange | null, formName: string) {
