@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import './ColorSelect.css';
 import { COLORS } from './defaultColors.ts';
-import type State from "./state.ts";
-import { useOutsideAlerter } from '../utils.ts';
+import type State from "../classes/state.ts";
+import { useOutsideAlerter } from '../../utils.ts';
 
 interface Props {
     color: string,

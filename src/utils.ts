@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type State from "./schedule/state";
+import type State from "./schedule/classes/state";
 
 /**
  * Edits an array in a rectangular section between two corners (firstElement) and (lastElement)

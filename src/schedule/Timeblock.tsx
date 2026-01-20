@@ -1,4 +1,4 @@
-import State from './state';
+import State from './classes/state';
 import './Timeblock.css';
 
 interface Props {

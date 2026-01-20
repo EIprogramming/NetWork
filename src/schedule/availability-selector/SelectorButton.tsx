@@ -1,11 +1,11 @@
 //import { useState } from 'react'
 import { useState } from 'react';
 import './SelectorButton.css'
-import State from './state';
+import State from '../classes/state';
 import ColorSelect from './ColorSelect';
 import { COLORS } from './defaultColors';
-import trash from '../assets/icons/trash.svg';
-import plus from '../assets/icons/plus.svg';
+import trash from '../../assets/icons/trash.svg';
+import plus from '../../assets/icons/plus.svg';
 
 interface Props {
     activeStates: Array<State>,

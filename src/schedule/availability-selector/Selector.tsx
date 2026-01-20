@@ -1,8 +1,8 @@
 import ColorSelect from './ColorSelect';
 import './Selector.css';
 import SelectorButton from './SelectorButton';
-import State from './state';
-import trash from '../assets/icons/trash.svg';
+import State from '../classes/state.ts';
+import trash from '../../assets/icons/trash.svg';
 
 interface Props {
     activeStates: Array<State>,

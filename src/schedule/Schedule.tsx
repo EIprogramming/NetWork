@@ -1,14 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Timeblock from './Timeblock.tsx';
-import Selector from './Selector.tsx';
-import State from './state.ts';
+import Selector from './availability-selector/Selector.tsx';
+import State from './classes/state.ts';
 import './Schedule.css';
 import { editArrayRegion, getTimeRange, initialize2DArray } from '../utils.ts';
 import { useParams, useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
-import Coordinate from './coordinate.ts';
-import { DEFAULT_COLORS } from './defaultColors.ts';
+import Coordinate from './classes/coordinate.ts';
+import { DEFAULT_COLORS } from './availability-selector/defaultColors.ts';
 import Login from './Login.tsx';
 
 type TimeRange = {

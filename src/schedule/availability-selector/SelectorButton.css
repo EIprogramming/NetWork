@@ -60,7 +60,7 @@
 }
 
 .selector-form-input:focus {
-    outline: none;
+    outline: 2px solid var(--border-color);
 }
 
 .selector-form-color {
