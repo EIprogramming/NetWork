@@ -7,6 +7,10 @@
     flex-grow: 1;
 }
 
+.schedule-grid-wrapper { /* purely so that .schedule-login-overlay fills .schedule when applying inset: 0*/
+    position: relative;
+}
+
 .schedule {
     display: flex;
     flex-direction: row;

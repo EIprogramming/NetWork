@@ -9,6 +9,7 @@ import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationaliz
 import { useDateFormatter } from 'react-aria';
 import Coordinate from './coordinate.ts';
 import { DEFAULT_COLORS } from './defaultColors.ts';
+import Login from './Login.tsx';
 
 type TimeRange = {
     start: CalendarDate,
@@ -328,15 +329,18 @@ function Schedule() {
         {title? <div className="schedule-wrapper">
             <h1 className="schedule-title">{title}</h1>
             <div className="schedule-container">
-                <div
-                draggable="false"
-                onMouseUp = {handleMouseUp}
-                onKeyDown= {handleKeyDown}
-                onFocus={() => setGridIsFocused(true)}
-                onBlur={() => setGridIsFocused(false)}
-                className="schedule"
-                role="grid">
-                    {createSchedule(activeTimeblocks, days, times)}
+                <div className="schedule-grid-wrapper">
+                    <div
+                    draggable="false"
+                    onMouseUp = {handleMouseUp}
+                    onKeyDown= {handleKeyDown}
+                    onFocus={() => setGridIsFocused(true)}
+                    onBlur={() => setGridIsFocused(false)}
+                    className="schedule"
+                    role="grid">
+                        <Login />
+                        {createSchedule(activeTimeblocks, days, times)}
+                    </div>
                 </div>
 
                 <Selector 
