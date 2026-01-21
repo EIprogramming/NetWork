@@ -15,7 +15,7 @@
 .schedule-login {
     margin-left: var(--block-width);
     margin-top: var(--block-height);
-    height: 24rem;
+    min-height: 24rem;
     width: 32rem;
     padding: 2rem;
     text-align: center;
@@ -38,4 +38,12 @@
 
 .schedule-login-input {
     height: 2rem;
+}
+
+div[role="alert"] {
+    color: var(--font-color-red);
+    font-style: italic;
+    height: 21px;
+    margin-bottom: -21px;
+    font-size: 14px;
 }
