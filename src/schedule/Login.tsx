@@ -26,8 +26,6 @@ function Login() {
                 <div className="schedule-login">
                     <form onSubmit={onSubmit}>
                         <h2 className="schedule-login-title">Sign Up/Log In</h2>
-                        <i className="schedule-login-italic">Please enter a username and optional password.</i>
-                        <div className="schedule-login-spacer"></div>
 
                         <label htmlFor="username">Name</label>
                         <div></div>
