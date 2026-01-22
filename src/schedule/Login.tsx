@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import './Login.css'
+import { useParams } from 'react-router';
 
 type User = {
     username: string,
@@ -9,7 +10,8 @@ type User = {
 
 function Login() {
     const { register, handleSubmit, getValues, formState: { errors } } = useForm<User>({mode: 'onChange'});
-    const onSubmit = handleSubmit((data) => console.log(data));
+    
+    const  { "*": scheduleId } = useParams();
     const usernameMaxlength = 40;
     const passwordMaxlength = 40;
     const passwordMinlength = 15;
@@ -19,6 +21,53 @@ function Login() {
             return "Passwords must match.";
         }
     }
+
+    const onSubmit = handleSubmit(async (data) => { 
+        // todo: implement passwords
+        const username = data.username;
+        const password = data.password;
+        
+        // check if confirm password exists
+        const confirmPassword = data.confirm || "";
+
+        if (password !== confirmPassword) { return; }
+        if (!scheduleId || !username) { return; }
+
+        const params = new URLSearchParams({
+            username,
+            scheduleId
+        });
+
+        let isNewUser = false;
+
+        await fetch(`http://localhost:3000/users?${params}`)
+            .then((res) => res.json())
+            .then((json) => {
+                // REMINDER: when adding password, make sure to still check if the user exists
+                console.log("mlue", json.username);
+                isNewUser = !(json.username);
+                if (isNewUser) { return; }
+                console.log("logged in: ", json.username);
+                
+            }).catch(error => {console.log(error)}).then(
+
+            );
+        
+        if (!isNewUser) { return; }
+        fetch(`http://localhost:3000/users`, {
+            method: "POST",
+            body: JSON.stringify({
+                "username": username,
+                "scheduleId": scheduleId
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        }).then((res) => res.json()).then((json) => {
+            console.log("signed up: ", json.username);
+        });
+        
+    });
 
     return (
         <div className="schedule-login-overlay">    
