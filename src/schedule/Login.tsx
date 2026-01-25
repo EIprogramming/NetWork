@@ -8,7 +8,11 @@ type User = {
     confirm: string
 }
 
-function Login() {
+interface Props {
+    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+function Login( { setIsLoggedIn } : Props ) {
     const { register, handleSubmit, getValues, formState: { errors } } = useForm<User>({mode: 'onChange'});
     
     const  { "*": scheduleId } = useParams();
@@ -20,6 +24,10 @@ function Login() {
         if (getValues("password") !== getValues("confirm")) {
             return "Passwords must match.";
         }
+    }
+
+    function logIn() {
+        setIsLoggedIn(true);
     }
 
     const onSubmit = handleSubmit(async (data) => { 
@@ -44,11 +52,10 @@ function Login() {
             .then((res) => res.json())
             .then((json) => {
                 // REMINDER: when adding password, make sure to still check if the user exists
-                console.log("mlue", json.username);
                 isNewUser = !(json.username);
                 if (isNewUser) { return; }
                 console.log("logged in: ", json.username);
-                
+                logIn();
             }).catch(error => {console.log(error)}).then(
 
             );
@@ -65,6 +72,7 @@ function Login() {
             }
         }).then((res) => res.json()).then((json) => {
             console.log("signed up: ", json.username);
+            logIn();
         });
         
     });

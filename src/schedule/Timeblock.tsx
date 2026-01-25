@@ -13,15 +13,6 @@ interface Props {
 
 function Timeblock( { col, row, value, ariaLabel,
         handleSelected, focusIndex, refs } : Props) {
-    /*
-     * TODO: REMOVE THIS FUNCTION IF NOT NECESSARY
-     * Gets the background colour of the Timeblock component based on its `value`
-     * @returns CSS colour of form `rgb(R, G, B)`
-     */
-    //function _getBackgroundColor() {
-    //    return value.color;
-    //}
-    //const isFocused = useRef(false); !important
 
     function handleClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) { handleMouseDown(e) }
 

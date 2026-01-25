@@ -56,6 +56,8 @@ function Schedule() {
     const [endTime, setEndTime] = useState(-1);
     const [times, setTimes] = useState(getTimeRange(startTime, endTime));
 
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -150,6 +152,7 @@ function Schedule() {
      * @param isFirstElement - whether the Timeblock component is the first element selected (see: `Timeblock handleMouseDown()`)
      */
     const handleTimeblockSelected = (col: number, row: number, isFirstElement: boolean) => {
+        if (!isLoggedIn) {return;}
         // initialize 'next' values that may be modified within the function without waiting for setFoo() from React useState
         let nextIsApplyingValue = isApplyingValue;
         let nextPrevActiveTimeblocks = oldActiveTimeblocks; // TODO: rename oldActive to prevActive...
@@ -201,6 +204,7 @@ function Schedule() {
     const timeblockRefs = useRef<(HTMLDivElement | null)[][]>([]);
 
     function getFocusIndex(colIndex: number, rowIndex: number) {
+        if (!isLoggedIn) return 0;
         if (focusedElement.col === colIndex && focusedElement.row === rowIndex) return 0;
         return -1;
     }
@@ -338,7 +342,7 @@ function Schedule() {
                     onBlur={() => setGridIsFocused(false)}
                     className="schedule"
                     role="grid">
-                        <Login />
+                        {!isLoggedIn && <Login setIsLoggedIn={setIsLoggedIn} />}
                         {createSchedule(activeTimeblocks, days, times)}
                     </div>
                 </div>
