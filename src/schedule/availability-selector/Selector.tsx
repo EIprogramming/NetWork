@@ -78,7 +78,6 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
     return (
         <div className="selector-container">
             <h2 className="selector-title">Select Modifier</h2>
-            <div className="selector-title"></div>
             {createSelectors()}
             <SelectorButton 
             activeStates={activeStates}

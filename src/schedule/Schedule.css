@@ -38,6 +38,12 @@
     margin-bottom: 2rem;
 }
 
+.schedule-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
 .titleblock {
     box-sizing: border-box;
     display: flex;

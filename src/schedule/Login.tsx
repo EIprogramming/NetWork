@@ -1,24 +1,32 @@
 import { useForm } from 'react-hook-form';
 import './Login.css'
 import { useParams } from 'react-router';
+import { useRef } from 'react';
+import type User from './classes/user';
+import type State from './classes/state';
+import { availableState, unavailableState, unsureState } from './classes/state';
 
-type User = {
+type UserLogin = {
     username: string,
     password: string,
     confirm: string
 }
 
 interface Props {
-    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>
+    setUser: React.Dispatch<React.SetStateAction<User | null>>,
+    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
+    setActiveTimeblocks: React.Dispatch<React.SetStateAction<Array<Array<State>>>>,
+    setOldActiveTimeblocks: React.Dispatch<React.SetStateAction<Array<Array<State>>>>
 }
 
-function Login( { setIsLoggedIn } : Props ) {
-    const { register, handleSubmit, getValues, formState: { errors } } = useForm<User>({mode: 'onChange'});
+function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeblocks } : Props ) {
+    const { register, handleSubmit, getValues, formState: { errors } } = useForm<UserLogin>({mode: 'onChange'});
     
     const  { "*": scheduleId } = useParams();
     const usernameMaxlength = 40;
     const passwordMaxlength = 40;
     const passwordMinlength = 15;
+    const user = useRef<User | null >(null);
 
     function validateConfirm() {
         if (getValues("password") !== getValues("confirm")) {
@@ -26,7 +34,62 @@ function Login( { setIsLoggedIn } : Props ) {
         }
     }
 
-    function logIn() {
+    async function getUserRawAvailability(currUser: User) {
+        const username = currUser.username;
+
+        if (!scheduleId || !username) { return; }
+
+        const params = new URLSearchParams({
+            username,
+            scheduleId
+        });
+        
+        return await fetch(`http://localhost:3000/availability?${params}`)
+            .then((res) => res.json())
+            .then((json) => {
+                const availability = json;
+                console.log(json);
+                console.log("avail", availability);
+                if (!availability) return; // Return null if availability not created yet
+                return availability;
+            }).catch(error => {console.log(error)}).then();
+    }
+
+    function getStatusName(status: Number) {
+        switch (status) {
+            case 0:
+                return unavailableState;
+            case 1:
+                return availableState;
+            case 2:
+                return unsureState;
+            default:
+                return unavailableState;
+        }
+
+    }
+
+    function unflattenAvailability(availability: Number[][]) {
+        return availability.map(row => {
+            return row.map(status => {
+                return getStatusName(status);
+            });
+        });
+    }
+
+    async function logIn(currUser: User) {
+        user.current = currUser;
+        if (!user.current) return;
+        setUser(user.current);
+
+        const rawAvailability = await getUserRawAvailability(currUser);
+        const availability = unflattenAvailability(rawAvailability);
+
+        if (availability) {
+            setActiveTimeblocks(availability);
+            setOldActiveTimeblocks(availability);
+        }
+
         setIsLoggedIn(true);
     }
 
@@ -55,10 +118,8 @@ function Login( { setIsLoggedIn } : Props ) {
                 isNewUser = !(json.username);
                 if (isNewUser) { return; }
                 console.log("logged in: ", json.username);
-                logIn();
-            }).catch(error => {console.log(error)}).then(
-
-            );
+                logIn(json);
+            }).catch(error => {console.log(error)}).then();
         
         if (!isNewUser) { return; }
         fetch(`http://localhost:3000/users`, {
@@ -72,7 +133,7 @@ function Login( { setIsLoggedIn } : Props ) {
             }
         }).then((res) => res.json()).then((json) => {
             console.log("signed up: ", json.username);
-            logIn();
+            logIn(json);
         });
         
     });

@@ -1,15 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Timeblock from './Timeblock.tsx';
 import Selector from './availability-selector/Selector.tsx';
-import State from './classes/state.ts';
+import State, { availableState, unavailableState, unsureState } from './classes/state.ts';
 import './Schedule.css';
 import { editArrayRegion, getTimeRange, initialize2DArray } from '../utils.ts';
 import { useParams, useSearchParams } from "react-router";
 import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
 import { useDateFormatter } from 'react-aria';
 import Coordinate from './classes/coordinate.ts';
-import { DEFAULT_COLORS } from './availability-selector/defaultColors.ts';
 import Login from './Login.tsx';
+import type User from './classes/user.ts';
+import Users from './Users.tsx';
 
 type TimeRange = {
     start: CalendarDate,
@@ -56,7 +57,9 @@ function Schedule() {
     const [endTime, setEndTime] = useState(-1);
     const [times, setTimes] = useState(getTimeRange(startTime, endTime));
 
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+    const [allUsers, setAllUsers] = useState<Array<User>>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -80,7 +83,6 @@ function Schedule() {
 
                 const nextTimes = getTimeRange(nextStartTime, nextEndTime);
                 setTimes(nextTimes);
-
                 setActiveTimeblocks(initialize2DArray(nextDays.length, 4*nextTimes.length, unavailableState));
                 setOldActiveTimeblocks(initialize2DArray(nextDays.length, 4*nextTimes.length, unavailableState));
 
@@ -93,13 +95,26 @@ function Schedule() {
             }
         }
 
-        fetchData();
-    }, []);
+        const fetchUsers = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/users/all?scheduleId=${scheduleId}`);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-    // an array of the possible states that a Timeblock may take
-    const unavailableState = new State("Unavailable", DEFAULT_COLORS.white, true);
-    const unsureState = new State("Maybe", DEFAULT_COLORS.yellow, true); // todo: remove for final product
-    const availableState = new State("Available", DEFAULT_COLORS.green, true);
+                const result = await response.json();
+                
+                setAllUsers(result);
+            } catch (err) {
+                // todo: make error
+                //setError(err.message);
+            } finally {
+                // todo: make loading
+                //setLoading(false);
+            }
+        }
+
+        fetchData();
+        fetchUsers();
+    }, []);
 
     const [activeStates, setActiveStates] = useState([availableState, unsureState, unavailableState]);
     const [activeState, setActiveState] = useState(availableState); // current state being applied
@@ -110,11 +125,11 @@ function Schedule() {
 
     // the schedule array that contains the activeState of each individual Timeblock element
     // each column corresponds to a day, and each row to a 15 minute segment of time (4 rows per hour)
-    const [activeTimeblocks, setActiveTimeblocks] = useState(initialize2DArray(days.length, 4*times.length, unavailableState));
+    const [activeTimeblocks, setActiveTimeblocks] = useState<State[][]>(initialize2DArray(days.length, 4*times.length, unavailableState));
     
     // a second array that keeps track of the previous schedule array,
     // so that adding rectangular selections during editing may be reverted
-    const [oldActiveTimeblocks, setOldActiveTimeblocks] = useState(initialize2DArray(days.length, 4*times.length, unavailableState));
+    const [oldActiveTimeblocks, setOldActiveTimeblocks] = useState<State[][]>(initialize2DArray(days.length, 4*times.length, unavailableState));
 
     // the first and last element in a rectangular selection, initialized to [-1, -1] to establish type
     const [firstElement, setFirstElement] = useState([-1, -1]);
@@ -141,6 +156,53 @@ function Schedule() {
         const formattedMins = mins.toString() + (mins === 0 ? '0' : '');
 
         return `${hour}:${formattedMins} ${morningOrAfternoon}, ${availability} on ${day}`;
+    }
+
+    function getStatusNumber(status: State) {
+        switch (status.name) {
+            case "Unavailable":
+                return 0;
+            case "Available":
+                return 1;
+            case "Maybe":
+                return 2;
+            default:
+                return -1;
+        }
+
+    }
+
+    function flattenAvailability(availability: State[][]) {
+        return availability.map(row => {
+            return row.map(status => {
+                return getStatusNumber(status);
+            });
+        });
+    }
+
+    async function sendUserAvailability(availability: State[][]) {
+        if (!isLoggedIn || !user) return;
+        console.log("happened:", JSON.stringify(flattenAvailability(availability)));
+
+        await fetch(`http://localhost:3000/availability`, {
+            method: "POST",
+            body: JSON.stringify({
+                "username": user.username,
+                "scheduleId": scheduleId,
+                "availability": JSON.stringify(flattenAvailability(availability))
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        }).then((res) => res.json()).then((json) => {
+            console.log("success: ", json.availability);
+        });
+    }
+
+    const saveTimeBlocks = (timeblocks: State[][]) => {
+        if (!isLoggedIn) {return;}
+        sendUserAvailability(timeblocks);
+        setOldActiveTimeblocks(timeblocks);
     }
 
     /**
@@ -190,10 +252,21 @@ function Schedule() {
         setActiveTimeblocks(nextActiveTimeBlocks);
     }
 
-    function handleMouseUp(_e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    function handleGlobalMouseUp() {
+        if (!isLoggedIn) {return;}
+        saveTimeBlocks(activeTimeblocks);
         setFirstElement([-1, -1]);
         setLastElement([-1, -1]);
     }
+
+    useEffect(() => {
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+
+        // Cleanup function to remove the event listener when the component unmounts
+        return () => {
+            window.removeEventListener('mouseup', handleGlobalMouseUp);
+        };
+    }, [activeTimeblocks]);
 
     /* =========================================================================== */
     /* ============= accessibility management for tabulated controls ============= */
@@ -221,7 +294,6 @@ function Schedule() {
                 if (row === 0) { nextFocusedElement = {col: column, row: maxRow}; }
                 else { nextFocusedElement = {col: column, row: row - 1}; }
                 setFocusedElement(nextFocusedElement);
-                console.log(nextFocusedElement.col, nextFocusedElement.row)
                 break;
             case "ArrowDown":
                 if (row === maxRow) { nextFocusedElement = {col: column, row: 0}; }
@@ -260,7 +332,7 @@ function Schedule() {
                 handleTimeblockSelected(focusedElement.col, focusedElement.row, true);
             } else {
                 // by saving the current selection, 'escapes' out of availability entry mode
-                setOldActiveTimeblocks(activeTimeblocks);
+                saveTimeBlocks(activeTimeblocks);
                 setFirstElement([-1, -1]);
             }
         }
@@ -330,29 +402,36 @@ function Schedule() {
 
     return (<>
         {/*Load schedule if title is not empty*/}
-        {title? <div className="schedule-wrapper">
+        {title?
+        <div className="schedule-wrapper">
             <h1 className="schedule-title">{title}</h1>
             <div className="schedule-container">
                 <div className="schedule-grid-wrapper">
                     <div
                     draggable="false"
-                    onMouseUp = {handleMouseUp}
+                    //onMouseUp = {handle(Global)MouseUp}
                     onKeyDown= {handleKeyDown}
                     onFocus={() => setGridIsFocused(true)}
                     onBlur={() => setGridIsFocused(false)}
                     className="schedule"
                     role="grid">
-                        {!isLoggedIn && <Login setIsLoggedIn={setIsLoggedIn} />}
+                        {!isLoggedIn && <Login
+                            setUser={setUser}
+                            setIsLoggedIn={setIsLoggedIn}
+                            setActiveTimeblocks={setActiveTimeblocks}
+                            setOldActiveTimeblocks={setOldActiveTimeblocks} />}
                         {createSchedule(activeTimeblocks, days, times)}
                     </div>
                 </div>
-
-                <Selector 
-                activeStates={activeStates}
-                setActiveStates={setActiveStates}
-                setActiveState={setActiveState}/>
+                <div className="schedule-sidebar">
+                    <Selector 
+                    activeStates={activeStates}
+                    setActiveStates={setActiveStates}
+                    setActiveState={setActiveState}/>
+                    <Users user={user} allUsers={ allUsers } />
                 </div>
-            </div> : null}
+            </div>
+        </div> : null}
         </>
         
     );

@@ -1,0 +1,37 @@
+.users-container {
+    display: flex;
+    flex-direction: column;
+    overflow: scroll;
+
+    width: 400px;
+    height: fit-content;
+    margin-top: 2rem;
+    margin-left: 2rem;
+    padding: 2rem 1rem;
+
+    background-color: rgba(0, 0, 0, 0.15);
+
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.users-title {
+    text-align: center;
+    margin-top: 0;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    columns: 2;
+    -webkit-columns: 2;
+    -moz-columns: 2;
+}
+
+li {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    list-style-type: none;
+    text-align: center;
+}
