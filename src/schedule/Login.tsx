@@ -51,6 +51,7 @@ function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeb
                 console.log(json);
                 console.log("avail", availability);
                 if (!availability) return; // Return null if availability not created yet
+                if (availability.errors) return;
                 return availability;
             }).catch(error => {console.log(error)}).then();
     }
@@ -70,6 +71,7 @@ function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeb
     }
 
     function unflattenAvailability(availability: Number[][]) {
+        if (!availability) return; // TODO: fix user not existing before login
         return availability.map(row => {
             return row.map(status => {
                 return getStatusName(status);
