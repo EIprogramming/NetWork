@@ -13,13 +13,14 @@ type UserLogin = {
 }
 
 interface Props {
-    setUser: React.Dispatch<React.SetStateAction<User | null>>,
+    setDefaultUser: React.Dispatch<React.SetStateAction<User | null>>,
     setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
+    activeTimeblocks: State[][],
     setActiveTimeblocks: React.Dispatch<React.SetStateAction<Array<Array<State>>>>,
     setOldActiveTimeblocks: React.Dispatch<React.SetStateAction<Array<Array<State>>>>
 }
 
-function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeblocks } : Props ) {
+function Login( { setDefaultUser, setIsLoggedIn, activeTimeblocks, setActiveTimeblocks, setOldActiveTimeblocks } : Props ) {
     const { register, handleSubmit, getValues, formState: { errors } } = useForm<UserLogin>({mode: 'onChange'});
     
     const  { "*": scheduleId } = useParams();
@@ -82,7 +83,6 @@ function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeb
     async function logIn(currUser: User) {
         user.current = currUser;
         if (!user.current) return;
-        setUser(user.current);
 
         const rawAvailability = await getUserRawAvailability(currUser);
         const availability = unflattenAvailability(rawAvailability);
@@ -90,8 +90,12 @@ function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeb
         if (availability) {
             setActiveTimeblocks(availability);
             setOldActiveTimeblocks(availability);
+            user.current.availability = availability;
+        } else {
+            user.current.availability = activeTimeblocks;
         }
 
+        setDefaultUser(user.current);
         setIsLoggedIn(true);
     }
 

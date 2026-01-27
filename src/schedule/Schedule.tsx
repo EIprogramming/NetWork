@@ -11,6 +11,7 @@ import Coordinate from './classes/coordinate.ts';
 import Login from './Login.tsx';
 import type User from './classes/user.ts';
 import Users from './Users.tsx';
+import { flattenAvailability, unflattenAvailability } from './availabilityUtils.ts';
 
 type TimeRange = {
     start: CalendarDate,
@@ -59,7 +60,14 @@ function Schedule() {
     const [times, setTimes] = useState(getTimeRange(startTime, endTime));
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
+    const currentUser = useRef<User | null>(null);
+    const [defaultUser, setDefaultUser] = useState<User | null>(null);
+
+    function updateUser(newUser: User) {
+        currentUser.current = newUser;
+        setActiveTimeblocks(newUser.availability);
+    }
+
     const [allUsers, setAllUsers] = useState<Array<User>>([]);
 
     useEffect(() => {
@@ -100,9 +108,16 @@ function Schedule() {
                 //const response = await fetch(`http://localhost:3000/users/all?scheduleId=${scheduleId}`);
                 const response = await fetch(`http://localhost:3000/availability/all?scheduleId=${scheduleId}`)
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
+                console.log("FETCHED USERS");
                 const result = await response.json();
-                const users = result;
+                const users = result.map((currentUser: any): User | null => {
+                    
+                    return {
+                        username: currentUser.username,
+                        scheduleId: scheduleId ?? "",
+                        availability: unflattenAvailability(currentUser.availability) ?? [],
+                    }
+                });
 
                 setAllUsers(users);
             } catch (err) {
@@ -160,30 +175,8 @@ function Schedule() {
         return `${hour}:${formattedMins} ${morningOrAfternoon}, ${availability} on ${day}`;
     }
 
-    function getStatusNumber(status: State) {
-        switch (status.name) {
-            case "Unavailable":
-                return 0;
-            case "Available":
-                return 1;
-            case "Maybe":
-                return 2;
-            default:
-                return -1;
-        }
-
-    }
-
-    function flattenAvailability(availability: State[][]): Number[][] {
-        return availability.map(row => {
-            return row.map(status => {
-                return getStatusNumber(status);
-            });
-        });
-    }
-
-    async function deleteUser(username: string) {
-        await fetch(`http://localhost:3000/users`, {
+    /*async function deleteUser(username: string) {
+        await fetch(`http://localhost:3000/users, {
             method: "DELETE",
             body: JSON.stringify({
                 "username": username,
@@ -195,43 +188,32 @@ function Schedule() {
         }).then((res) => res.json()).then((_json) => {
             
         });
-    }
+    }*/
 
     async function sendUserAvailability(availability: State[][]) {
-        if (!isLoggedIn || !user) return;
+        if (!isLoggedIn || !defaultUser) return;
         const flattenedAvailability = flattenAvailability(availability);
-        const isAllZeros = (array2D: Number[][]) => {
-            return array2D.every(row => {
-                return row.every(value => {
-                    if (value != 0) return false;
-                    else {return true; }
-                })
-            });
-        };
-
-        // if the user removes their availability they get deleted
-        if (isAllZeros(flattenedAvailability)) {
-            await deleteUser(user.username);
-            return;
-        }
 
         await fetch(`http://localhost:3000/availability`, {
             method: "POST",
             body: JSON.stringify({
-                "username": user.username,
+                "username": defaultUser.username,
                 "scheduleId": scheduleId,
                 "availability": JSON.stringify(flattenedAvailability)
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
-        }).then((res) => res.json()).then((json) => {
-            console.log(json, "testing user avail");
-        });
+        }).then((res) => res.json()).then(() => {});
     }
 
     const saveTimeBlocks = (timeblocks: State[][]) => {
-        if (!isLoggedIn) {return;}
+        if (!isLoggedIn) return;
+        if (!defaultUser) return;
+        const updatedDefaultUser: User = defaultUser;
+        updatedDefaultUser.availability = timeblocks;
+    
+        setDefaultUser(updatedDefaultUser)
         sendUserAvailability(timeblocks);
         setOldActiveTimeblocks(timeblocks);
     }
@@ -246,6 +228,10 @@ function Schedule() {
      */
     const handleTimeblockSelected = (col: number, row: number, isFirstElement: boolean) => {
         if (!isLoggedIn) {return;}
+        
+        // if the currentUser exists (currentUser.current) and its username is NOT equal to the default users,
+        // prevent editing
+        if (currentUser.current && currentUser.current.username !== defaultUser?.username) {return;}
         // initialize 'next' values that may be modified within the function without waiting for setFoo() from React useState
         let nextIsApplyingValue = isApplyingValue;
         let nextPrevActiveTimeblocks = oldActiveTimeblocks; // TODO: rename oldActive to prevActive...
@@ -447,8 +433,9 @@ function Schedule() {
                     className="schedule"
                     role="grid">
                         {!isLoggedIn && <Login
-                            setUser={setUser}
+                            setDefaultUser={setDefaultUser}
                             setIsLoggedIn={setIsLoggedIn}
+                            activeTimeblocks={activeTimeblocks}
                             setActiveTimeblocks={setActiveTimeblocks}
                             setOldActiveTimeblocks={setOldActiveTimeblocks} />}
                         {createSchedule(activeTimeblocks, days, times)}
@@ -459,7 +446,7 @@ function Schedule() {
                     activeStates={activeStates}
                     setActiveStates={setActiveStates}
                     setActiveState={setActiveState}/>
-                    <Users user={user} allUsers={allUsers} />
+                    <Users updateUser={updateUser} defaultUser={defaultUser} allUsers={allUsers} />
                 </div>
             </div>
         </div> : null}

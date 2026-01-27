@@ -1,16 +1,37 @@
+import { flattenAvailability } from './availabilityUtils';
 import type User from './classes/user';
 import './Users.css'
 
 interface Props {
-    user: User | null,
+    updateUser: (newUser: User) => void,
+    defaultUser: User | null,
     allUsers: User[],
 }
 
-function Users( {user, allUsers} : Props) {
+function Users( {updateUser, defaultUser, allUsers} : Props) {
+
+    function  isAllZeros(array2D: Number[][]): boolean {
+        return array2D.every(row => {
+            return row.every(value => {
+                if (value != 0) return false;
+                else {return true; }
+            })
+        });
+    };
 
     function checkUserInAllUsers() {
-        if (!user) return false;
-        return allUsers.some(userCheck => userCheck.username === user.username);
+        if (!defaultUser) return false;
+        return allUsers.some(userCheck => userCheck.username === defaultUser.username);
+    }
+
+    function handleMouseEnter(newUser: User) {
+        if (!defaultUser) return;
+        updateUser(newUser);
+    }
+    
+    function handleMouseLeave() {
+        if (!defaultUser) return;
+        updateUser(defaultUser);
     }
 
     function generateUsersList() {
@@ -18,11 +39,19 @@ function Users( {user, allUsers} : Props) {
 
         const isUserInAllUsers = checkUserInAllUsers();
 
-        const usersToDisplay = isUserInAllUsers ? [...allUsers] : [...allUsers, user];
+        const usersToDisplay = isUserInAllUsers ? [...allUsers] : [...allUsers, defaultUser];
 
         return usersToDisplay.map(userToDisplay => {
             if (!userToDisplay) return;
-            return <li key={`${userToDisplay.username}`}>{userToDisplay.username}</li>
+            const isDefaultUser = (defaultUser?.username === userToDisplay.username);
+            if (!isDefaultUser && isAllZeros(flattenAvailability(userToDisplay.availability))) return;
+            return <li
+                className="users-list-element"
+                key={`${userToDisplay.username}`}
+                onMouseEnter={() => handleMouseEnter(userToDisplay)}
+                onMouseLeave={handleMouseLeave}>
+                    {userToDisplay.username}
+                </li>
         });
     }
 
@@ -32,6 +61,8 @@ function Users( {user, allUsers} : Props) {
             <ul> {/*TODO: add pagination */}
                 {generateUsersList()}
             </ul>
+            <div className="users-separator"></div>
+            <button>View All Users</button>
         </div>
     );
 }

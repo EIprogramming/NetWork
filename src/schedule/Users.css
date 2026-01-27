@@ -28,10 +28,22 @@ ul {
     -moz-columns: 2;
 }
 
-li {
+.users-list-element {
+    display: flex;
+    height: 30px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     list-style-type: none;
-    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.users-list-element:hover {
+    cursor: default;
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.users-separator {
+    height: 1rem;
 }
