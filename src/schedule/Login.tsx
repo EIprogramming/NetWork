@@ -133,7 +133,7 @@ function Login( { setUser, setIsLoggedIn, setActiveTimeblocks, setOldActiveTimeb
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
-        }).then((res) => res.json()).then((json) => {
+        }).then((res) => res.json()).then(async (json) => {
             console.log("signed up: ", json.username);
             logIn(json);
         });

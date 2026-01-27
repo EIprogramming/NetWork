@@ -17,6 +17,7 @@ type TimeRange = {
     end: CalendarDate,
 }
 
+
 function Schedule() {
     // ===========================================================================
     // BIG TODO - TO speed up user experience, load every param as a default param
@@ -85,7 +86,6 @@ function Schedule() {
                 setTimes(nextTimes);
                 setActiveTimeblocks(initialize2DArray(nextDays.length, 4*nextTimes.length, unavailableState));
                 setOldActiveTimeblocks(initialize2DArray(nextDays.length, 4*nextTimes.length, unavailableState));
-
             } catch (err) {
                 // todo: make error
                 //setError(err.message);
@@ -97,12 +97,14 @@ function Schedule() {
 
         const fetchUsers = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/users/all?scheduleId=${scheduleId}`);
+                //const response = await fetch(`http://localhost:3000/users/all?scheduleId=${scheduleId}`);
+                const response = await fetch(`http://localhost:3000/availability/all?scheduleId=${scheduleId}`)
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
                 const result = await response.json();
-                
-                setAllUsers(result);
+                const users = result;
+
+                setAllUsers(users);
             } catch (err) {
                 // todo: make error
                 //setError(err.message);
@@ -172,7 +174,7 @@ function Schedule() {
 
     }
 
-    function flattenAvailability(availability: State[][]) {
+    function flattenAvailability(availability: State[][]): Number[][] {
         return availability.map(row => {
             return row.map(status => {
                 return getStatusNumber(status);
@@ -180,22 +182,51 @@ function Schedule() {
         });
     }
 
+    async function deleteUser(username: string) {
+        await fetch(`http://localhost:3000/users`, {
+            method: "DELETE",
+            body: JSON.stringify({
+                "username": username,
+                "scheduleId": scheduleId,
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        }).then((res) => res.json()).then((_json) => {
+            
+        });
+    }
+
     async function sendUserAvailability(availability: State[][]) {
         if (!isLoggedIn || !user) return;
-        console.log("happened:", JSON.stringify(flattenAvailability(availability)));
+        const flattenedAvailability = flattenAvailability(availability);
+        const isAllZeros = (array2D: Number[][]) => {
+            return array2D.every(row => {
+                return row.every(value => {
+                    if (value != 0) return false;
+                    else {return true; }
+                })
+            });
+        };
+
+        // if the user removes their availability they get deleted
+        if (isAllZeros(flattenedAvailability)) {
+            await deleteUser(user.username);
+            return;
+        }
 
         await fetch(`http://localhost:3000/availability`, {
             method: "POST",
             body: JSON.stringify({
                 "username": user.username,
                 "scheduleId": scheduleId,
-                "availability": JSON.stringify(flattenAvailability(availability))
+                "availability": JSON.stringify(flattenedAvailability)
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
         }).then((res) => res.json()).then((json) => {
-            console.log("success: ", json.availability);
+            console.log(json, "testing user avail");
         });
     }
 
@@ -424,11 +455,11 @@ function Schedule() {
                     </div>
                 </div>
                 <div className="schedule-sidebar">
-                    <Selector 
+                    <Selector
                     activeStates={activeStates}
                     setActiveStates={setActiveStates}
                     setActiveState={setActiveState}/>
-                    <Users user={user} allUsers={ allUsers } />
+                    <Users user={user} allUsers={allUsers} />
                 </div>
             </div>
         </div> : null}
