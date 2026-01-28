@@ -62,13 +62,105 @@ function Schedule() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const currentUser = useRef<User | null>(null);
     const [defaultUser, setDefaultUser] = useState<User | null>(null);
+    const [allUsers, setAllUsers] = useState<Array<User>>([]);
 
     function updateUser(newUser: User) {
         currentUser.current = newUser;
         setActiveTimeblocks(newUser.availability);
     }
 
-    const [allUsers, setAllUsers] = useState<Array<User>>([]);
+    const [isDisplayAll, setIsDisplayAll] = useState<boolean>(false);
+    const [hoveredTimeblock, setHoveredTimeblock] = useState<Coordinate>( new Coordinate(-1, -1) );
+
+    function hexToNum(hex: string) {
+        return Number("0x" + hex);
+    }
+
+    function sumToLimits(sum: number, ceil: number, floor: number) {
+        if (sum > ceil) {
+            return ceil;
+        } else if (sum < floor) {
+            return floor;
+        } else {
+            return sum;
+        }
+    }
+
+    function getGradientStateColor(stateToDisplay: State, gradientSize: number) {
+        const defaultColorHex = stateToDisplay.color.slice(1);
+        const RGB = [defaultColorHex.slice(0,2), defaultColorHex.slice(2,4), defaultColorHex.slice(4,6)];
+
+        let gradientStates = [];
+        // todo: rewrite this algorithm or add preset gradients since you are using preset colours
+        // might just do a preset gradient, algorithmic colour is slow
+        for (let i = 0; i < gradientSize; i++) {
+            const numRGB = RGB.map(rgb => {return hexToNum(rgb)})
+            const scaleFactor = 75*(3-i); // scale by -10, -5, 0, +5, +10 rgb
+
+            // add the scale factor to original colour with limits
+            const maxRGB = Math.max(...numRGB);
+
+            const newRGB = numRGB.map(rgb => {
+                if (rgb == maxRGB) return sumToLimits(Math.ceil(scaleFactor/3) + rgb, 255, 0);
+                return sumToLimits(scaleFactor + rgb, 200, 0);
+            });
+
+            const newHexRGB = newRGB.map(rgb => {
+                if (rgb < 16) return "0" + rgb.toString(16)
+                return rgb.toString(16)
+            });
+
+            const newColor = "#" + newHexRGB.join('');
+            const newGradientState = new State(stateToDisplay.name, newColor, false);
+            gradientStates.push(newGradientState);
+        }
+
+        return gradientStates;
+    }
+
+    function getValueStep(min: number, max: number, maxNumSteps: number) {
+        if (max - min > maxNumSteps) {
+            return (max - min) / maxNumSteps;
+        } else {
+            return 1;
+        }
+    }
+
+    function displayAllAvailabilities(sumOfAllAvailabilities: number[][]) {
+        const stateToDisplay = availableState; // temp
+
+        const sumOfAllAvailabilities1D = sumOfAllAvailabilities.flat();
+        const minValue = Math.min(...sumOfAllAvailabilities1D);
+        const maxValue = Math.max(...sumOfAllAvailabilities1D);
+
+        const gradientSize = 5;
+        const gradientStates = getGradientStateColor(stateToDisplay, gradientSize);
+
+        const valueStep = getValueStep(minValue, maxValue, gradientSize);
+
+        let redUnavailableState = unavailableState;
+        redUnavailableState.color = "#ffe0e0";
+
+        const availabilitiesToDisplay = sumOfAllAvailabilities.map((row) => {
+            return row.map(value => {
+                if (value == 0) return redUnavailableState;
+                if (value == minValue) return gradientStates[0];
+                if (value == maxValue) return gradientStates[gradientSize - 1];
+
+                const intermediateIndex = Math.floor(value/valueStep); // todo: work on this algorithm
+                return gradientStates[intermediateIndex];
+            });
+        });
+
+        setIsDisplayAll(true);
+        setActiveTimeblocks(availabilitiesToDisplay);
+    }
+
+    // turns off displaying all user availabilities
+    function resetAvailabilityToDefault() {
+        setIsDisplayAll(false);
+        setActiveTimeblocks(oldActiveTimeblocks);
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -227,11 +319,15 @@ function Schedule() {
      * @param isFirstElement - whether the Timeblock component is the first element selected (see: `Timeblock handleMouseDown()`)
      */
     const handleTimeblockSelected = (col: number, row: number, isFirstElement: boolean) => {
-        if (!isLoggedIn) {return;}
+        if (!isLoggedIn) return;
         
         // if the currentUser exists (currentUser.current) and its username is NOT equal to the default users,
         // prevent editing
-        if (currentUser.current && currentUser.current.username !== defaultUser?.username) {return;}
+        if (!isDefaultUser) return;
+
+        // if currently displaying all users, dont allow edits
+        if (isDisplayAll) return;
+
         // initialize 'next' values that may be modified within the function without waiting for setFoo() from React useState
         let nextIsApplyingValue = isApplyingValue;
         let nextPrevActiveTimeblocks = oldActiveTimeblocks; // TODO: rename oldActive to prevActive...
@@ -269,8 +365,17 @@ function Schedule() {
         setActiveTimeblocks(nextActiveTimeBlocks);
     }
 
+    function isDefaultUser() {
+        // if the currentUser exists (currentUser.current) and its username is NOT equal to the default users
+        // then it is NOT the default user... so the converse means that it IS the default user
+        return !(currentUser.current && currentUser.current.username !== defaultUser?.username);
+    }
+
     function handleGlobalMouseUp() {
-        if (!isLoggedIn) {return;}
+        if (!isLoggedIn) return;
+        if (isDisplayAll) return;
+        if (!defaultUser) return;
+    
         saveTimeBlocks(activeTimeblocks);
         setFirstElement([-1, -1]);
         setLastElement([-1, -1]);
@@ -330,7 +435,6 @@ function Schedule() {
             default:
                 break;
         }
-        
         
         if (nextFocusedElement) handleTimeblockSelected(nextFocusedElement.col, nextFocusedElement.row, false);
         e.preventDefault();
@@ -409,7 +513,9 @@ function Schedule() {
                         ariaLabel={getTimeblockLabel(colNum, rowNum)}
                         handleSelected={handleTimeblockSelected}
                         focusIndex={getFocusIndex(colNum, rowNum)}
-                        refs={timeblockRefs} />
+                        refs={timeblockRefs}
+                        hoveredTimeblock={hoveredTimeblock}
+                        setHoveredTimeblock={setHoveredTimeblock} />
                     })}
                 </div>)
             })}
@@ -426,7 +532,6 @@ function Schedule() {
                 <div className="schedule-grid-wrapper">
                     <div
                     draggable="false"
-                    //onMouseUp = {handle(Global)MouseUp}
                     onKeyDown= {handleKeyDown}
                     onFocus={() => setGridIsFocused(true)}
                     onBlur={() => setGridIsFocused(false)}
@@ -446,7 +551,13 @@ function Schedule() {
                     activeStates={activeStates}
                     setActiveStates={setActiveStates}
                     setActiveState={setActiveState}/>
-                    <Users updateUser={updateUser} defaultUser={defaultUser} allUsers={allUsers} />
+                    <Users
+                    updateUser={updateUser}
+                    defaultUser={defaultUser}
+                    allUsers={allUsers}
+                    displayAllAvailabilities={displayAllAvailabilities}
+                    resetAvailabilityToDefault={resetAvailabilityToDefault}
+                    hoveredTimeblock={hoveredTimeblock} />
                 </div>
             </div>
         </div> : null}

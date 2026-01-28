@@ -1,16 +1,30 @@
-import { flattenAvailability } from './availabilityUtils';
+import { useState } from 'react';
+import { flattenAvailability, getStatusNumber } from './availabilityUtils';
+import type State from './classes/state';
+import { availableState } from './classes/state';
 import type User from './classes/user';
 import './Users.css'
+import type Coordinate from './classes/coordinate';
 
 interface Props {
     updateUser: (newUser: User) => void,
     defaultUser: User | null,
     allUsers: User[],
+    displayAllAvailabilities: (sumOfAllAvailabilities: number[][]) => void,
+    resetAvailabilityToDefault: () => void,
+    hoveredTimeblock: Coordinate
 }
 
-function Users( {updateUser, defaultUser, allUsers} : Props) {
+function Users({
+    updateUser,
+    defaultUser,
+    allUsers,
+    displayAllAvailabilities,
+    resetAvailabilityToDefault,
+    hoveredTimeblock} : Props) {
+    const [isDisplayAll, setIsDisplayAll] = useState<boolean>(false);
 
-    function  isAllZeros(array2D: Number[][]): boolean {
+    function isAllZeros(array2D: number[][]): boolean {
         return array2D.every(row => {
             return row.every(value => {
                 if (value != 0) return false;
@@ -18,6 +32,55 @@ function Users( {updateUser, defaultUser, allUsers} : Props) {
             })
         });
     };
+
+    function sumNumericalStates(
+        numericalState: number,
+        allUserAvailabilities: number[][][],
+        rowIndex: number,
+        colIndex: number) {
+        let sumOfStates = 0;
+            for (const userAvailability of allUserAvailabilities) {
+                if (userAvailability[rowIndex][colIndex] === numericalState) {
+                    sumOfStates++;
+                }
+            }
+
+        return sumOfStates;
+    }
+
+    // todo: when a user has empty availability, delete on entry of someone else
+    function getAllUserAvailabilities(state: State, toggle=true) {
+        // if not logged in (i.e. default user not set) then return
+        if (!defaultUser) return;
+        if (isDisplayAll && toggle) {
+            resetAvailabilityToDefault();
+            setIsDisplayAll(false);
+            return;
+        }
+
+        // flatten user availabilities to compare numerically if states are the same
+        const allUserAvailabilities = getEveryUser().map((user: User) => {
+            const flattenedAvailability = flattenAvailability(user.availability);
+            return flattenedAvailability;
+        });
+
+        // create a 2D availability array of the number of times each desired state is available
+        if (!allUserAvailabilities) return;
+        const firstUserAvailability = allUserAvailabilities[0];
+        const numericalDesiredState = getStatusNumber(state);
+        const sumOfAllAvailabilities = firstUserAvailability.map((row: number[], rowIndex: number) => {
+            return row.map((_value, colIndex: number) => {
+                return sumNumericalStates(
+                    numericalDesiredState,
+                    allUserAvailabilities,
+                    rowIndex,
+                    colIndex);
+            });
+        });
+
+        displayAllAvailabilities(sumOfAllAvailabilities);
+        setIsDisplayAll(true);
+    }
 
     function checkUserInAllUsers() {
         if (!defaultUser) return false;
@@ -31,25 +94,55 @@ function Users( {updateUser, defaultUser, allUsers} : Props) {
     
     function handleMouseLeave() {
         if (!defaultUser) return;
-        updateUser(defaultUser);
+        if (isDisplayAll) {
+            getAllUserAvailabilities(availableState, false);
+        } else {
+            updateUser(defaultUser);
+        }
+    }
+
+    function getEveryUser() {
+        const isUserInAllUsers = checkUserInAllUsers();
+
+        return (isUserInAllUsers || !defaultUser) ? [...allUsers] : [...allUsers, defaultUser];
+    }
+
+    function isUserAvailableAt(user: User, hoveredTimeblock: Coordinate) {
+        if (!user.availability) return;
+        if (!isDisplayAll) return;
+     
+        const [row, col] = [hoveredTimeblock.row, hoveredTimeblock.col];
+        
+        // if not hovered over a timeblock, return to normal font color.
+        if (row === -1 || col === -1) return;
+
+        if (user.availability[col][row].name === availableState.name) {
+            return '#bbffbb';
+        } else {
+            return '#ffaeae';
+        }
     }
 
     function generateUsersList() {
         if (!allUsers) return;
 
-        const isUserInAllUsers = checkUserInAllUsers();
-
-        const usersToDisplay = isUserInAllUsers ? [...allUsers] : [...allUsers, defaultUser];
+        const usersToDisplay = getEveryUser();
 
         return usersToDisplay.map(userToDisplay => {
             if (!userToDisplay) return;
             const isDefaultUser = (defaultUser?.username === userToDisplay.username);
             if (!isDefaultUser && isAllZeros(flattenAvailability(userToDisplay.availability))) return;
             return <li
+                tabIndex={0} // TODO: add full keyboard navigation
                 className="users-list-element"
                 key={`${userToDisplay.username}`}
+                onFocus={() => handleMouseEnter(userToDisplay)}
                 onMouseEnter={() => handleMouseEnter(userToDisplay)}
-                onMouseLeave={handleMouseLeave}>
+                onBlur={handleMouseLeave}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                    color: isUserAvailableAt(userToDisplay, hoveredTimeblock)
+                }}>
                     {userToDisplay.username}
                 </li>
         });
@@ -62,7 +155,11 @@ function Users( {updateUser, defaultUser, allUsers} : Props) {
                 {generateUsersList()}
             </ul>
             <div className="users-separator"></div>
-            <button>View All Users</button>
+            <button
+                className={isDisplayAll ? "users-button-activated" : ""}
+                onClick={() => getAllUserAvailabilities(availableState)}>
+                View All Users    
+            </button>
         </div>
     );
 }

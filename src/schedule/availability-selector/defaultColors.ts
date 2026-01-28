@@ -8,8 +8,9 @@ export const COLORS = {
 }
 
 export const DEFAULT_COLORS = {
-    white: 'rgb(255, 255, 255)',
-    green: 'rgb(205, 255, 200)',
-    yellow: 'rgb(255, 255, 200)',
+    white: '#ffffff',
+    green: '#cdffc8',//'rgb(205, 255, 200)',
+    //green: '#cdffc8',//'rgb(205, 255, 200)',
+    yellow: '#ffffc8', //'rgb(255, 255, 200)',
 }
 

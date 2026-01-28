@@ -4,7 +4,7 @@ import { useParams } from 'react-router';
 import { useRef } from 'react';
 import type User from './classes/user';
 import type State from './classes/state';
-import { availableState, unavailableState, unsureState } from './classes/state';
+import { unflattenAvailability } from './availabilityUtils';
 
 type UserLogin = {
     username: string,
@@ -55,29 +55,6 @@ function Login( { setDefaultUser, setIsLoggedIn, activeTimeblocks, setActiveTime
                 if (availability.errors) return;
                 return availability;
             }).catch(error => {console.log(error)}).then();
-    }
-
-    function getStatusName(status: Number) {
-        switch (status) {
-            case 0:
-                return unavailableState;
-            case 1:
-                return availableState;
-            case 2:
-                return unsureState;
-            default:
-                return unavailableState;
-        }
-
-    }
-
-    function unflattenAvailability(availability: Number[][]) {
-        if (!availability) return; // TODO: fix user not existing before login
-        return availability.map(row => {
-            return row.map(status => {
-                return getStatusName(status);
-            });
-        });
     }
 
     async function logIn(currUser: User) {

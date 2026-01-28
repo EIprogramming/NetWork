@@ -1,5 +1,7 @@
+import type React from 'react';
 import State from './classes/state';
 import './Timeblock.css';
+import Coordinate from './classes/coordinate';
 
 interface Props {
     col: number,
@@ -9,10 +11,21 @@ interface Props {
     handleSelected: (col: number, row: number, isFirstElement: boolean) => void,
     focusIndex: number,
     refs: React.RefObject<(HTMLDivElement | null)[][]>,
+    hoveredTimeblock: Coordinate,
+    setHoveredTimeblock: React.Dispatch<React.SetStateAction<Coordinate>>,
 }
 
-function Timeblock( { col, row, value, ariaLabel,
-        handleSelected, focusIndex, refs } : Props) {
+function Timeblock({
+    col,
+    row,
+    value,
+    ariaLabel,
+
+    handleSelected,
+    focusIndex,
+    refs,
+    hoveredTimeblock,
+    setHoveredTimeblock } : Props) {
 
     function handleClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) { handleMouseDown(e) }
 
@@ -25,6 +38,14 @@ function Timeblock( { col, row, value, ariaLabel,
     function handleMouseEnter(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         if (e.buttons % 2) {
             handleSelected(col, row, false);
+        }
+
+        setHoveredTimeblock( new Coordinate(col, row));
+    }
+
+    function handleMouseLeave() {
+        if (hoveredTimeblock.col == col && hoveredTimeblock.row == row) {
+            setHoveredTimeblock( new Coordinate(-1, -1) );
         }
     }
 
@@ -60,6 +81,7 @@ function Timeblock( { col, row, value, ariaLabel,
         onMouseDown={(e) => handleMouseDown(e)}
         onClick={(e) => handleClick(e)}
         onMouseEnter={(e) => handleMouseEnter(e)}
+        onMouseLeave={() => handleMouseLeave()}
         ref={(element) => {
             if (!refs.current[row]) refs.current[row] = []; // add a new row to the 2D array for each row
             if (element) refs.current[row][col] = element;

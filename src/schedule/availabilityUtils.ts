@@ -1,6 +1,6 @@
 import State, { availableState, unavailableState, unsureState } from "./classes/state";
 
-function getStatusName(status: Number) {
+function getStatusName(status: number) {
         switch (status) {
             case 0:
                 return unavailableState;
@@ -14,7 +14,7 @@ function getStatusName(status: Number) {
 
     }
 
-export function unflattenAvailability(availability: Number[][]) {
+export function unflattenAvailability(availability: number[][]) {
     if (!availability) return; // TODO: fix user not existing before login
     return availability.map(row => {
         return row.map(status => {
@@ -23,7 +23,7 @@ export function unflattenAvailability(availability: Number[][]) {
     });
 }
 
-function getStatusNumber(status: State) {
+export function getStatusNumber(status: State) {
     switch (status.name) {
         case "Unavailable":
             return 0;
@@ -36,7 +36,7 @@ function getStatusNumber(status: State) {
     }
 }
 
-export function flattenAvailability(availability: State[][]): Number[][] {
+export function flattenAvailability(availability: State[][]): number[][] {
     return availability.map(row => {
         return row.map(status => {
             return getStatusNumber(status);
