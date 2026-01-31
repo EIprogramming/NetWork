@@ -5,10 +5,9 @@ import { useDateFormatter } from 'react-aria';
 import { parseDate } from '@internationalized/date';
 
 // API FUNCTIONS
-import { fetchScheduleData, fetchUsers } from './API/scheduleAPI.ts';
+import { fetchScheduleData, fetchUsers, sendUserAvailability } from './API/scheduleAPI.ts';
 
 // UTILITY FUNCTIONS
-import { flattenAvailability } from './utils/availabilityUtils.ts';
 import { makeDays, type TimeRange } from './utils/dateUtils.ts';
 import { getAllAvailabilitiesToDisplay } from './utils/displayAllUtils.ts';
 import { getTimeblockLabel } from './utils/timeblockUtils.ts';
@@ -141,33 +140,17 @@ function Schedule() {
     const [firstElement, setFirstElement] = useState([-1, -1]);
     const [lastElement, setLastElement] = useState([-1, -1]);
 
-    async function sendUserAvailability(availability: State[][]) {
-        if (!isLoggedIn || !defaultUser) return;
-        const flattenedAvailability = flattenAvailability(availability);
-
-        await fetch(`http://localhost:3000/availability`, {
-            method: "POST",
-            body: JSON.stringify({
-                "username": defaultUser.username,
-                "scheduleId": scheduleId,
-                "availability": JSON.stringify(flattenedAvailability)
-            }),
-            headers: {
-                "Content-type": "application/json; charset=UTF-8"
-            }
-        }).then((res) => res.json()).then(() => {});
-    }
-
     const saveTimeBlocks = (timeblocks: State[][]) => {
-        if (!isLoggedIn) return;
-        if (!defaultUser) return;
+        if (!isLoggedIn ||
+            !defaultUser ||
+            !scheduleId) return;
         const updatedDefaultUser: User = defaultUser;
         updatedDefaultUser.availability = timeblocks;
     
         setDefaultUser(updatedDefaultUser)
         updateAllUsers(updatedDefaultUser)
         
-        sendUserAvailability(timeblocks);
+        sendUserAvailability(defaultUser.username, scheduleId, timeblocks);
         setOldActiveTimeblocks(timeblocks);
     }
 

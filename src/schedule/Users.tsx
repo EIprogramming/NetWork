@@ -103,7 +103,6 @@ function Users({
 
     function getEveryUser() {
         const isUserInAllUsers = checkUserInAllUsers();
-        // TODO: update user self... if in all users
         return (isUserInAllUsers || !defaultUser) ? [...allUsers] : [...allUsers, defaultUser];
     }
 

@@ -1,16 +1,13 @@
 import { useRef, useState, type Key } from 'react';
 import { RangeCalendar } from './calendar/RangeCalendar';
-import {getLocalTimeZone, CalendarDate} from '@internationalized/date';
+import { getLocalTimeZone } from '@internationalized/date';
 import {useDateFormatter} from 'react-aria';
 import { getTimeRange } from '../utils.ts'
 import { useNavigate } from 'react-router';
 import { Select, SelectItem } from './select/Select.tsx';
 import './Home.css'
-
-type TimeRange = {
-    start: CalendarDate,
-    end: CalendarDate,
-}
+import type { TimeRange } from '../schedule/utils/dateUtils.ts';
+import { postSchedule } from './API/homeAPI.ts';
 
 function Home() {
     const navigate = useNavigate();
@@ -24,25 +21,20 @@ function Home() {
 
     function createSchedule(formData: FormData) {
         if (range === null) return;
-        const title = formData.get("event-title");
+        const title = formData.get("event-title")?.toString();
         const startDay = range.start.toString();
         const endDay = range.end.toString();
         const startTime = formStartTime.current;
         const endTime = formEndTime.current;
-        fetch("http://localhost:3000/schedule", {
-            method: "POST",
-            body: JSON.stringify({
-                "title": title,
-                "startDay": startDay,
-                "endDay": endDay,
-                "startTime": startTime,
-                "endTime": endTime
-            }),
-            headers: {
-                "Content-type": "application/json; charset=UTF-8"
-            }
-        }).then((response) => response.json()).then((json) => navigate(`/schedule/${json.public_id}`));
-        //navigate(`/schedule?name=${title}&sDay=${range.start}&eDay=${range.end}&sTime=${startTime}&eTime=${endTime}`);
+
+        if (!title) return;
+        postSchedule({
+            title: title,
+            startDay: startDay,
+            endDay: endDay,
+            startTime: startTime,
+            endTime: endTime
+        }, navigate);
     }
 
     function checkIsFormValid(formRange: TimeRange | null, formName: string) {

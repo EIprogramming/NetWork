@@ -1,10 +1,10 @@
 import { makeDays, type TimeRange } from "../utils/dateUtils";
 import { getTimeRange, initialize2DArray } from "../../utils";
-import { unavailableState } from "../classes/state";
+import State, { unavailableState } from "../classes/state";
 import { type DateFormatter } from 'react-aria';
 import { parseDate } from '@internationalized/date';
 import type User from "../classes/user";
-import { unflattenAvailability } from "../utils/availabilityUtils";
+import { flattenAvailability, unflattenAvailability } from "../utils/availabilityUtils";
 
 export type ScheduleData = {
     title: string,
@@ -66,4 +66,20 @@ export async function fetchUsers(scheduleId: string | undefined) {
         console.log(err);
         throw err;
     }
+}
+
+export async function sendUserAvailability(username: string, scheduleId: string, availability: State[][]) {
+    const flattenedAvailability = flattenAvailability(availability);
+
+    await fetch(`http://localhost:3000/availability`, {
+        method: "POST",
+        body: JSON.stringify({
+            "username": username,
+            "scheduleId": scheduleId,
+            "availability": JSON.stringify(flattenedAvailability)
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    }).then((res) => res.json()).then(() => {});
 }
