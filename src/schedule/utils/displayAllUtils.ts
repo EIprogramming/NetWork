@@ -32,14 +32,14 @@ export function getGradientStateColor(stateToDisplay: State, gradientSize: numbe
     // might just do a preset gradient, algorithmic colour is slow
     for (let i = 0; i < gradientSize; i++) {
         const numRGB = RGB.map(rgb => {return hexToNum(rgb)})
-        const scaleFactor = 75*(3-i); // scale by -10, -5, 0, +5, +10 rgb
+        const scaleFactor = 50*(-i); // scale by -10, -5, 0, +5, +10 rgb
 
         // add the scale factor to original colour with limits
         const maxRGB = Math.max(...numRGB);
 
         const newRGB = numRGB.map(rgb => {
-            if (rgb == maxRGB) return sumToLimits(Math.ceil(scaleFactor/3) + rgb, 255, 0);
-            return sumToLimits(scaleFactor + rgb, 200, 0);
+            if (rgb == maxRGB) return sumToLimits(Math.ceil(scaleFactor/2) + rgb, 255, 0);
+            return sumToLimits(scaleFactor + rgb, 255, 0);
         });
 
         const newHexRGB = newRGB.map(rgb => {
@@ -52,6 +52,8 @@ export function getGradientStateColor(stateToDisplay: State, gradientSize: numbe
         gradientStates.push(newGradientState);
     }
 
+    console.log(gradientStates);
+    
     return gradientStates;
 }
 

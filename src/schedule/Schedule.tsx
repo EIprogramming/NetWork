@@ -62,6 +62,14 @@ function Schedule() {
         setActiveTimeblocks(newUser.availability);
     }
 
+    function updateAllUsers(updatedUser: User) {
+        allUsers.forEach(user => {
+            if (user.username === updatedUser.username) {
+                user.availability = updatedUser.availability;
+            }
+        });
+    }
+
     function isDefaultUser() {
         // if the currentUser exists (currentUser.current) and its username is NOT equal to the default users
         // then it is NOT the default user... so the converse means that it IS the default user
@@ -157,6 +165,8 @@ function Schedule() {
         updatedDefaultUser.availability = timeblocks;
     
         setDefaultUser(updatedDefaultUser)
+        updateAllUsers(updatedDefaultUser)
+        
         sendUserAvailability(timeblocks);
         setOldActiveTimeblocks(timeblocks);
     }
