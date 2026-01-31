@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { flattenAvailability, getStatusNumber } from './availabilityUtils';
+import { flattenAvailability, getStatusNumber } from './utils/availabilityUtils';
 import type State from './classes/state';
 import { availableState } from './classes/state';
 import type User from './classes/user';
@@ -107,20 +107,42 @@ function Users({
         return (isUserInAllUsers || !defaultUser) ? [...allUsers] : [...allUsers, defaultUser];
     }
 
-    function isUserAvailableAt(user: User, hoveredTimeblock: Coordinate) {
+    function userAvailableAt(user: User, hoveredTimeblock: Coordinate) {
         if (!user.availability) return;
         if (!isDisplayAll) return;
-     
-        const [row, col] = [hoveredTimeblock.row, hoveredTimeblock.col];
-        
-        // if not hovered over a timeblock, return to normal font color.
-        if (row === -1 || col === -1) return;
 
+        const [row, col] = [hoveredTimeblock.row, hoveredTimeblock.col];
+        if (row === -1 || col === -1) return -1; // not hovering at all
+    
         if (user.availability[col][row].name === availableState.name) {
-            return '#bbffbb';
+            return 1; // available
         } else {
-            return '#ffaeae';
+            return 0; // unavailable
         }
+    }
+
+    function getUserAvailableColor(user: User, hoveredTimeblock: Coordinate) {
+        if (!user.availability) return;
+        if (!isDisplayAll) return;
+
+        const isUserAvailable = userAvailableAt(user, hoveredTimeblock);
+        if (isUserAvailable == 1) {
+            return '#bbffbb';
+        } else if (isUserAvailable == 0) {
+            return '#ffaeae';
+        } else { return; }
+    }
+
+    function getUserAvailableCheckmark(user: User, hoveredTimeblock: Coordinate) {
+        if (!user.availability) return;
+        if (!isDisplayAll) return;
+
+        const isUserAvailable = userAvailableAt(user, hoveredTimeblock);
+        if (isUserAvailable == 1) {
+            return " ✔";
+        } else if (isUserAvailable == 0) {
+            return " ✘";
+        } else { return ""; }
     }
 
     function generateUsersList() {
@@ -141,9 +163,10 @@ function Users({
                 onBlur={handleMouseLeave}
                 onMouseLeave={handleMouseLeave}
                 style={{
-                    color: isUserAvailableAt(userToDisplay, hoveredTimeblock)
+                    color: getUserAvailableColor(userToDisplay, hoveredTimeblock)
                 }}>
                     {userToDisplay.username}
+                    {getUserAvailableCheckmark(userToDisplay, hoveredTimeblock)}
                 </li>
         });
     }

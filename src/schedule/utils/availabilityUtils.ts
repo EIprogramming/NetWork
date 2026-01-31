@@ -1,18 +1,17 @@
-import State, { availableState, unavailableState, unsureState } from "./classes/state";
+import State, { availableState, unavailableState, unsureState } from "../classes/state";
 
 function getStatusName(status: number) {
-        switch (status) {
-            case 0:
-                return unavailableState;
-            case 1:
-                return availableState;
-            case 2:
-                return unsureState;
-            default:
-                return unavailableState;
-        }
-
+    switch (status) {
+        case 0:
+            return unavailableState;
+        case 1:
+            return availableState;
+        case 2:
+            return unsureState;
+        default:
+            return unavailableState;
     }
+}
 
 export function unflattenAvailability(availability: number[][]) {
     if (!availability) return; // TODO: fix user not existing before login

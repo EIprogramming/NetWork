@@ -4,7 +4,7 @@ import { useParams } from 'react-router';
 import { useRef } from 'react';
 import type User from './classes/user';
 import type State from './classes/state';
-import { unflattenAvailability } from './availabilityUtils';
+import { unflattenAvailability } from './utils/availabilityUtils';
 
 type UserLogin = {
     username: string,
