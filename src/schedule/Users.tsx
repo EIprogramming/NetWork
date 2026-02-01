@@ -7,6 +7,7 @@ import './Users.css'
 import type Coordinate from './classes/coordinate';
 
 interface Props {
+    statusMap: State[],
     updateUser: (newUser: User) => void,
     defaultUser: User | null,
     allUsers: User[],
@@ -16,6 +17,7 @@ interface Props {
 }
 
 function Users({
+    statusMap,
     updateUser,
     defaultUser,
     allUsers,
@@ -60,14 +62,14 @@ function Users({
 
         // flatten user availabilities to compare numerically if states are the same
         const allUserAvailabilities = getEveryUser().map((user: User) => {
-            const flattenedAvailability = flattenAvailability(user.availability);
+            const flattenedAvailability = flattenAvailability(user.availability, statusMap);
             return flattenedAvailability;
         });
 
         // create a 2D availability array of the number of times each desired state is available
         if (!allUserAvailabilities) return;
         const firstUserAvailability = allUserAvailabilities[0];
-        const numericalDesiredState = getStatusNumber(state);
+        const numericalDesiredState = getStatusNumber(state, statusMap);
         const sumOfAllAvailabilities = firstUserAvailability.map((row: number[], rowIndex: number) => {
             return row.map((_value, colIndex: number) => {
                 return sumNumericalStates(
@@ -152,7 +154,7 @@ function Users({
         return usersToDisplay.map(userToDisplay => {
             if (!userToDisplay) return;
             const isDefaultUser = (defaultUser?.username === userToDisplay.username);
-            if (!isDefaultUser && isAllZeros(flattenAvailability(userToDisplay.availability))) return;
+            if (!isDefaultUser && isAllZeros(flattenAvailability(userToDisplay.availability, statusMap))) return;
             return <li
                 tabIndex={0} // TODO: add full keyboard navigation
                 className="users-list-element"

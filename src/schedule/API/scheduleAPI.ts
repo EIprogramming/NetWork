@@ -68,14 +68,15 @@ export async function fetchUsers(scheduleId: string | undefined) {
     }
 }
 
-export async function sendUserAvailability(username: string, scheduleId: string, availability: State[][]) {
-    const flattenedAvailability = flattenAvailability(availability);
+export async function postUserAvailability(user: User, statusMap: State[]) {
+    const flattenedAvailability = flattenAvailability(user.availability, statusMap);
+    console.log(flattenedAvailability);
 
     await fetch(`http://localhost:3000/availability`, {
         method: "POST",
         body: JSON.stringify({
-            "username": username,
-            "scheduleId": scheduleId,
+            "username": user.username,
+            "scheduleId": user.scheduleId,
             "availability": JSON.stringify(flattenedAvailability)
         }),
         headers: {

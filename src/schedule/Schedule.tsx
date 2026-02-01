@@ -5,7 +5,7 @@ import { useDateFormatter } from 'react-aria';
 import { parseDate } from '@internationalized/date';
 
 // API FUNCTIONS
-import { fetchScheduleData, fetchUsers, sendUserAvailability } from './API/scheduleAPI.ts';
+import { fetchScheduleData, fetchUsers, postUserAvailability } from './API/scheduleAPI.ts';
 
 // UTILITY FUNCTIONS
 import { makeDays, type TimeRange } from './utils/dateUtils.ts';
@@ -26,6 +26,7 @@ import Selector from './availability-selector/Selector.tsx';
 
 // STYLESHEET
 import './Schedule.css';
+import { fetchStates } from './API/statusAPI.ts';
 
 function Schedule() {
     // ========================================================================
@@ -109,11 +110,19 @@ function Schedule() {
             setOldActiveTimeblocks(scheduleData.initialTimeblocks);
         }
 
+        async function setStates() {
+            if (!scheduleId) return;
+            const stateData = await fetchStates(scheduleId);
+            statusMap.current = stateData;
+            setActiveStates(stateData);
+        }
+
         async function setUsersData() {
             const users = await fetchUsers(scheduleId);
             setAllUsers(users);
         }
 
+        setStates();
         setScheduleData();
         setUsersData();
     }, [scheduleId, formatter]);
@@ -124,6 +133,7 @@ function Schedule() {
     const [activeStates, setActiveStates] = useState([availableState, unsureState, unavailableState]);
     const [activeState, setActiveState] = useState(availableState); // current state being applied
     const defaultState = useRef(unavailableState); // state to apply if deselecting current state
+    const statusMap = useRef<State[]>([]);
 
     // isApplyingValue keeps track of whether activeState is being applied (true) or defaultState (false)
     const [isApplyingValue, setIsApplyingValue] = useState(false);
@@ -150,7 +160,13 @@ function Schedule() {
         setDefaultUser(updatedDefaultUser)
         updateAllUsers(updatedDefaultUser)
         
-        sendUserAvailability(defaultUser.username, scheduleId, timeblocks);
+        const postUser = {
+            username: defaultUser.username,
+            scheduleId: scheduleId,
+            availability: timeblocks
+        }
+
+        postUserAvailability(postUser, statusMap.current);
         setOldActiveTimeblocks(timeblocks);
     }
 
@@ -391,6 +407,7 @@ function Schedule() {
                     setActiveStates={setActiveStates}
                     setActiveState={setActiveState}/>
                     <Users
+                    statusMap={statusMap.current}
                     updateUser={updateUser}
                     defaultUser={defaultUser}
                     allUsers={allUsers}

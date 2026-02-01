@@ -3,9 +3,11 @@ import { useState } from 'react';
 import './SelectorButton.css'
 import State from '../classes/state';
 import ColorSelect from './ColorSelect';
-import { COLORS } from './defaultColors';
+import { COLORS } from '../classes/defaultColors';
 import trash from '../../assets/icons/trash.svg';
 import plus from '../../assets/icons/plus.svg';
+import { postNewState } from '../API/statusAPI';
+import { useParams } from 'react-router';
 
 interface Props {
     activeStates: Array<State>,
@@ -14,8 +16,9 @@ interface Props {
 
 function Selector( { activeStates, setActiveStates } : Props ) {
     const [isButtonVisible, setIsButtonVisible] = useState(true);
-    const defaultColor = COLORS.red;
+    const defaultColor = COLORS.blue;
     const [color, setColor] = useState(defaultColor);
+    const  { "*": scheduleId } = useParams();
 
     function includesStateName(states: Array<State>, name: string) {
         let isIncluded = false;
@@ -30,6 +33,8 @@ function Selector( { activeStates, setActiveStates } : Props ) {
     }
 
     function addNewState(state: State) {
+        if (!scheduleId) return;
+
         let nextActiveStates = structuredClone(activeStates);
         let trimmedStateName = state.name.trim();
         // make sure the new state is not a duplicate
@@ -37,7 +42,8 @@ function Selector( { activeStates, setActiveStates } : Props ) {
         setIsButtonVisible(true)
         
         nextActiveStates.push(state);
-        setActiveStates(nextActiveStates); // TODO: add colours for these new states, etc.
+        setActiveStates(nextActiveStates);
+        postNewState(scheduleId, state);
     }
 
     function handleSubmitNewState(e: React.FormEvent<HTMLFormElement>) {

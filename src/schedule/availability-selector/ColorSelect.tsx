@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import './ColorSelect.css';
-import { COLORS } from './defaultColors.ts';
+import { COLORS } from '../classes/defaultColors.ts';
 import type State from "../classes/state.ts";
 import { useOutsideAlerter } from '../../utils.ts';
 
@@ -34,7 +34,7 @@ function ColorPicker( {color, setColor, state, setState, isDefault, tabIndex } :
         const defaultColors = Object.entries(COLORS);
         const firstRow: Array<React.ReactElement<any, any>> = [];
         const secondRow: Array<React.ReactElement<any, any>> = [];
-        const rowLength = 3; // to generate a row with ${rowLength} colour elements
+        const rowLength = 2; // to generate a row with ${rowLength} colour elements
 
         defaultColors.map((element, index) => { // TODO: add arrow key navigation
             const defaultColor = element[1];

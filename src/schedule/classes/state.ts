@@ -1,4 +1,4 @@
-import { DEFAULT_COLORS } from "../availability-selector/defaultColors";
+import { DEFAULT_COLORS } from "./defaultColors";
 
 class State {
     name: string;
@@ -13,7 +13,7 @@ class State {
 }
 
 export const unavailableState = new State("Unavailable", DEFAULT_COLORS.white, true);
-export const unsureState = new State("Maybe", DEFAULT_COLORS.yellow, true); // todo: remove for final product
+export const unsureState = new State("If Necessary", DEFAULT_COLORS.yellow, true); // todo: remove for final product
 export const availableState = new State("Available", DEFAULT_COLORS.green, true);
 
 export default State
