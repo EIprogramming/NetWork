@@ -1,5 +1,5 @@
 // EXTERNAL LIBRARIES
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from "react-router";
 import { useDateFormatter } from 'react-aria';
 import { parseDate } from '@internationalized/date';
@@ -96,44 +96,64 @@ function Schedule() {
 
     // on startup: set the schedule data and user data
     useEffect(() => {
-        async function setScheduleData() {
-            const scheduleData = await fetchScheduleData(scheduleId, formatter);
-            if (!scheduleData) return;
+        async function setAllData() {
+            async function setScheduleData() {
+                const scheduleData = await fetchScheduleData(scheduleId, formatter);
+                if (!scheduleData) return;
 
-            setTitle(scheduleData.title);
-            setRange(scheduleData.range);
-            setDays(scheduleData.days);
-            setStartTime(scheduleData.startTime);
-            setEndTime(scheduleData.endTime);
-            setTimes(scheduleData.times);
-            setActiveTimeblocks(scheduleData.initialTimeblocks);
-            setOldActiveTimeblocks(scheduleData.initialTimeblocks);
+                setTitle(scheduleData.title);
+                setRange(scheduleData.range);
+                setDays(scheduleData.days);
+                setStartTime(scheduleData.startTime);
+                setEndTime(scheduleData.endTime);
+                setTimes(scheduleData.times);
+                setActiveTimeblocks(scheduleData.initialTimeblocks);
+                setOldActiveTimeblocks(scheduleData.initialTimeblocks);
+            }
+
+            async function setStates() {
+                if (!scheduleId) return;
+                const stateData = await fetchStates(scheduleId);
+                
+                setActiveStates(stateData);
+            }
+
+            async function setUsersData() {
+                const users = await fetchUsers(scheduleId, reverseStatusMap);
+                setAllUsers(users);
+            }
+
+            await setStates();
+            await setScheduleData();
+            await setUsersData();
         }
 
-        async function setStates() {
-            if (!scheduleId) return;
-            const stateData = await fetchStates(scheduleId);
-            statusMap.current = stateData;
-            setActiveStates(stateData);
-        }
-
-        async function setUsersData() {
-            const users = await fetchUsers(scheduleId);
-            setAllUsers(users);
-        }
-
-        setStates();
-        setScheduleData();
-        setUsersData();
+        setAllData();
     }, [scheduleId, formatter]);
 
     // ========================================================================
     // =================== State and Timeblock Management =====================
     // ========================================================================
     const [activeStates, setActiveStates] = useState([availableState, unsureState, unavailableState]);
+
     const [activeState, setActiveState] = useState(availableState); // current state being applied
     const defaultState = useRef(unavailableState); // state to apply if deselecting current state
-    const statusMap = useRef<State[]>([]);
+    //const statusMap = useRef<Map<string, number>>(new Map());
+    const statusMap = useMemo<Map<string, number>>(() => {
+        const map = new Map<string, number>();
+        activeStates.forEach((state: State, i: number) => {
+            map.set(state.name, i);
+        })
+        return map;
+    }, [activeStates]);
+
+    const reverseStatusMap = useMemo<Map<number,State>>(() => {
+        const map = new Map<number, State>();
+        activeStates.forEach((state: State, i: number) => {
+            map.set(i, state);
+        })
+        return map;
+    }, [activeStates]);
 
     // isApplyingValue keeps track of whether activeState is being applied (true) or defaultState (false)
     const [isApplyingValue, setIsApplyingValue] = useState(false);
@@ -166,7 +186,7 @@ function Schedule() {
             availability: timeblocks
         }
 
-        postUserAvailability(postUser, statusMap.current);
+        postUserAvailability(postUser, statusMap);
         setOldActiveTimeblocks(timeblocks);
     }
 
@@ -395,6 +415,7 @@ function Schedule() {
                         {!isLoggedIn && <Login
                             setDefaultUser={setDefaultUser}
                             setIsLoggedIn={setIsLoggedIn}
+                            reverseStatusMap={reverseStatusMap}
                             activeTimeblocks={activeTimeblocks}
                             setActiveTimeblocks={setActiveTimeblocks}
                             setOldActiveTimeblocks={setOldActiveTimeblocks} />}
@@ -407,7 +428,7 @@ function Schedule() {
                     setActiveStates={setActiveStates}
                     setActiveState={setActiveState}/>
                     <Users
-                    statusMap={statusMap.current}
+                    statusMap={statusMap}
                     updateUser={updateUser}
                     defaultUser={defaultUser}
                     allUsers={allUsers}

@@ -45,7 +45,7 @@ export async function fetchScheduleData(scheduleId: string | undefined, formatte
     }
 }
 
-export async function fetchUsers(scheduleId: string | undefined) {
+export async function fetchUsers(scheduleId: string | undefined, reverseStatusMap: Map<number, State>) {
     if (!scheduleId) return;
     try {
         //const response = await fetch(`http://localhost:3000/users/all?scheduleId=${scheduleId}`);
@@ -57,7 +57,7 @@ export async function fetchUsers(scheduleId: string | undefined) {
             return {
                 username: currentUser.username,
                 scheduleId: scheduleId ?? "",
-                availability: unflattenAvailability(currentUser.availability) ?? [],
+                availability: unflattenAvailability(currentUser.availability, reverseStatusMap) ?? [],
             }
         });
 
@@ -68,7 +68,7 @@ export async function fetchUsers(scheduleId: string | undefined) {
     }
 }
 
-export async function postUserAvailability(user: User, statusMap: State[]) {
+export async function postUserAvailability(user: User, statusMap: Map<string, number>) {
     const flattenedAvailability = flattenAvailability(user.availability, statusMap);
     console.log(flattenedAvailability);
 

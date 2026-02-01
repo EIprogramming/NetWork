@@ -7,7 +7,7 @@ import './Users.css'
 import type Coordinate from './classes/coordinate';
 
 interface Props {
-    statusMap: State[],
+    statusMap: Map<string, number>,
     updateUser: (newUser: User) => void,
     defaultUser: User | null,
     allUsers: User[],

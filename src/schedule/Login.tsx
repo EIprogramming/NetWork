@@ -16,11 +16,18 @@ interface Props {
     setDefaultUser: React.Dispatch<React.SetStateAction<User | null>>,
     setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
     activeTimeblocks: State[][],
+    reverseStatusMap: Map<number, State>,
     setActiveTimeblocks: React.Dispatch<React.SetStateAction<Array<Array<State>>>>,
     setOldActiveTimeblocks: React.Dispatch<React.SetStateAction<Array<Array<State>>>>
 }
 
-function Login( { setDefaultUser, setIsLoggedIn, activeTimeblocks, setActiveTimeblocks, setOldActiveTimeblocks } : Props ) {
+function Login( {
+    setDefaultUser,
+    setIsLoggedIn,
+    activeTimeblocks,
+    reverseStatusMap,
+    setActiveTimeblocks,
+    setOldActiveTimeblocks } : Props ) {
     const { register, handleSubmit, getValues, formState: { errors } } = useForm<UserLogin>({mode: 'onChange'});
     
     const  { "*": scheduleId } = useParams();
@@ -62,7 +69,7 @@ function Login( { setDefaultUser, setIsLoggedIn, activeTimeblocks, setActiveTime
         if (!user.current) return;
 
         const rawAvailability = await getUserRawAvailability(currUser);
-        const availability = unflattenAvailability(rawAvailability);
+        const availability = unflattenAvailability(rawAvailability, reverseStatusMap);
 
         if (availability) {
             setActiveTimeblocks(availability);
