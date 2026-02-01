@@ -6,11 +6,11 @@ import trash from '../../assets/icons/trash.svg';
 
 interface Props {
     activeStates: Array<State>,
-    setActiveStates: React.Dispatch<React.SetStateAction<Array<State>>>,
+    setActiveStatesMapped: (newActiveStates: State[]) => void
     setActiveState: React.Dispatch<React.SetStateAction<State>>
 }
 
-function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
+function Selector( {activeStates, setActiveStatesMapped, setActiveState} : Props ) {
     function removeActiveState(activeState: State) {
         let nextActiveStates = structuredClone(activeStates);
         let stateIndex: number = -1;
@@ -19,7 +19,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
         })
         
         if (stateIndex > -1) nextActiveStates.splice(stateIndex, 1); // remove the element at specific index
-        setActiveStates(nextActiveStates);
+        setActiveStatesMapped(nextActiveStates);
     }
 
     function setStateColor(state: State, nextColor: React.SetStateAction<string>) {
@@ -30,7 +30,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
             }
         })
 
-        setActiveStates(nextActiveStates);
+        setActiveStatesMapped(nextActiveStates);
     }
 
      // hardcoded for now, TODO: make this dynamic for future changes.
@@ -81,7 +81,7 @@ function Selector( {activeStates, setActiveStates, setActiveState} : Props ) {
             {createSelectors()}
             <SelectorButton 
             activeStates={activeStates}
-            setActiveStates={setActiveStates} />
+            setActiveStatesMapped={setActiveStatesMapped} />
         </div>
     );
 }

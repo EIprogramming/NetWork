@@ -58,7 +58,6 @@ function ColorPicker( {color, setColor, state, setState, isDefault, tabIndex } :
     const colorSelect = useRef<HTMLDivElement>(null);
     const colorSelectButton = useRef<HTMLButtonElement>(null);
     const handleOutsideClick = useCallback((e: MouseEvent) => {
-        console.log(isDisplayColorPicker);
         if (!e.target || !colorSelectButton.current) return;
         // only close the color select window when it is open
         // and not when it is being opened by pressing colorSelectButton

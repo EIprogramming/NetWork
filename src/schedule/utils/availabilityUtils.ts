@@ -1,9 +1,11 @@
-import State, { unavailableState } from "../classes/state";
+import State, { errorState } from "../classes/state";
 
 function getStatusName(status: number, reverseStatusMap: Map<number, State>) {
     const name = reverseStatusMap.get(status);
-
-    if (name === null || name === undefined) return unavailableState;
+    if (name === null || name === undefined) {
+        console.log(status, "ERROR!", reverseStatusMap);
+        return errorState;
+    }
     return name;
 }
 

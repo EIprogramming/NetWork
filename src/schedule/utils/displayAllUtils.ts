@@ -51,8 +51,6 @@ export function getGradientStateColor(stateToDisplay: State, gradientSize: numbe
         const newGradientState = new State(stateToDisplay.name, newColor, false);
         gradientStates.push(newGradientState);
     }
-
-    console.log(gradientStates);
     
     return gradientStates;
 }

@@ -70,7 +70,6 @@ export async function fetchUsers(scheduleId: string | undefined, reverseStatusMa
 
 export async function postUserAvailability(user: User, statusMap: Map<string, number>) {
     const flattenedAvailability = flattenAvailability(user.availability, statusMap);
-    console.log(flattenedAvailability);
 
     await fetch(`http://localhost:3000/availability`, {
         method: "POST",

@@ -11,5 +11,6 @@ export const DEFAULT_COLORS = {
     green: '#cdffc8',//'rgb(205, 255, 200)',
     //green: '#cdffc8',//'rgb(205, 255, 200)',
     yellow: '#ffffc8', //'rgb(255, 255, 200)',
+    black: '#000000'
 }
 

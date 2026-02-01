@@ -1,5 +1,5 @@
 // EXTERNAL LIBRARIES
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams } from "react-router";
 import { useDateFormatter } from 'react-aria';
 import { parseDate } from '@internationalized/date';
@@ -114,18 +114,19 @@ function Schedule() {
             async function setStates() {
                 if (!scheduleId) return;
                 const stateData = await fetchStates(scheduleId);
-                
-                setActiveStates(stateData);
+                setActiveStatesMapped(stateData);
             }
 
             async function setUsersData() {
-                const users = await fetchUsers(scheduleId, reverseStatusMap);
+                const users = await fetchUsers(scheduleId, reverseStatusMap.current);
                 setAllUsers(users);
             }
 
-            await setStates();
-            await setScheduleData();
-            await setUsersData();
+            setStates().then(() => {
+                setScheduleData().then(() => {
+                    setUsersData();
+                });
+            });
         }
 
         setAllData();
@@ -138,22 +139,32 @@ function Schedule() {
 
     const [activeState, setActiveState] = useState(availableState); // current state being applied
     const defaultState = useRef(unavailableState); // state to apply if deselecting current state
-    //const statusMap = useRef<Map<string, number>>(new Map());
-    const statusMap = useMemo<Map<string, number>>(() => {
+
+    const statusMap = useRef<Map<string, number>>(new Map());
+
+    const reverseStatusMap = useRef<Map<number, State>>(new Map());
+
+    function setActiveStatesMapped(newActiveStates: State[]) {
+        setActiveStates(newActiveStates);
+        updateStatusMap(newActiveStates);
+        updateReverseStatusMap(newActiveStates);
+    }
+
+    function updateStatusMap(newActiveStates: State[]) {
         const map = new Map<string, number>();
-        activeStates.forEach((state: State, i: number) => {
+        newActiveStates.forEach((state: State, i: number) => {
             map.set(state.name, i);
         })
-        return map;
-    }, [activeStates]);
+        statusMap.current = map;
+    }
 
-    const reverseStatusMap = useMemo<Map<number,State>>(() => {
+    function updateReverseStatusMap(newActiveStates: State[]) {
         const map = new Map<number, State>();
-        activeStates.forEach((state: State, i: number) => {
+        newActiveStates.forEach((state: State, i: number) => {
             map.set(i, state);
         })
-        return map;
-    }, [activeStates]);
+        reverseStatusMap.current = map;
+    }
 
     // isApplyingValue keeps track of whether activeState is being applied (true) or defaultState (false)
     const [isApplyingValue, setIsApplyingValue] = useState(false);
@@ -186,7 +197,7 @@ function Schedule() {
             availability: timeblocks
         }
 
-        postUserAvailability(postUser, statusMap);
+        postUserAvailability(postUser, statusMap.current);
         setOldActiveTimeblocks(timeblocks);
     }
 
@@ -415,7 +426,7 @@ function Schedule() {
                         {!isLoggedIn && <Login
                             setDefaultUser={setDefaultUser}
                             setIsLoggedIn={setIsLoggedIn}
-                            reverseStatusMap={reverseStatusMap}
+                            reverseStatusMap={reverseStatusMap.current}
                             activeTimeblocks={activeTimeblocks}
                             setActiveTimeblocks={setActiveTimeblocks}
                             setOldActiveTimeblocks={setOldActiveTimeblocks} />}
@@ -425,10 +436,10 @@ function Schedule() {
                 <div className="schedule-sidebar">
                     <Selector
                     activeStates={activeStates}
-                    setActiveStates={setActiveStates}
+                    setActiveStatesMapped={setActiveStatesMapped}
                     setActiveState={setActiveState}/>
                     <Users
-                    statusMap={statusMap}
+                    statusMap={statusMap.current}
                     updateUser={updateUser}
                     defaultUser={defaultUser}
                     allUsers={allUsers}

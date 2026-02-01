@@ -56,8 +56,6 @@ function Login( {
             .then((res) => res.json())
             .then((json) => {
                 const availability = json;
-                console.log(json);
-                console.log("avail", availability);
                 if (!availability) return; // Return null if availability not created yet
                 if (availability.errors) return;
                 return availability;
@@ -107,7 +105,6 @@ function Login( {
                 // REMINDER: when adding password, make sure to still check if the user exists
                 isNewUser = !(json.username);
                 if (isNewUser) { return; }
-                console.log("logged in: ", json.username);
                 logIn(json);
             }).catch(error => {console.log(error)}).then();
         
@@ -122,7 +119,6 @@ function Login( {
                 "Content-type": "application/json; charset=UTF-8"
             }
         }).then((res) => res.json()).then(async (json) => {
-            console.log("signed up: ", json.username);
             logIn(json);
         });
         

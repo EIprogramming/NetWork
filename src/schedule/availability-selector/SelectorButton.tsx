@@ -11,10 +11,10 @@ import { useParams } from 'react-router';
 
 interface Props {
     activeStates: Array<State>,
-    setActiveStates: React.Dispatch<React.SetStateAction<Array<State>>>
+    setActiveStatesMapped: (newActiveStates: State[]) => void,
 }
 
-function Selector( { activeStates, setActiveStates } : Props ) {
+function Selector( { activeStates, setActiveStatesMapped } : Props ) {
     const [isButtonVisible, setIsButtonVisible] = useState(true);
     const defaultColor = COLORS.blue;
     const [color, setColor] = useState(defaultColor);
@@ -42,7 +42,7 @@ function Selector( { activeStates, setActiveStates } : Props ) {
         setIsButtonVisible(true)
         
         nextActiveStates.push(state);
-        setActiveStates(nextActiveStates);
+        setActiveStatesMapped(nextActiveStates);
         postNewState(scheduleId, state);
     }
 
