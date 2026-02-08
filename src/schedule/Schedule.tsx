@@ -27,6 +27,7 @@ import Selector from './availability-selector/Selector.tsx';
 // STYLESHEET
 import './Schedule.css';
 import { fetchStates } from './API/statusAPI.ts';
+import ViewSelector from './availability-selector/ViewSelector.tsx';
 
 function Schedule() {
     // ========================================================================
@@ -82,8 +83,8 @@ function Schedule() {
     const [isDisplayAll, setIsDisplayAll] = useState<boolean>(false);
     const [hoveredTimeblock, setHoveredTimeblock] = useState<Coordinate>( new Coordinate(-1, -1) );
 
-    function displayAllAvailabilities(sumOfAllAvailabilities: number[][]) {
-        const availabilitiesToDisplay = getAllAvailabilitiesToDisplay(sumOfAllAvailabilities);
+    function displayAllAvailabilities(sumOfAllAvailabilities: number[][], stateToDisplay: State) {
+        const availabilitiesToDisplay = getAllAvailabilitiesToDisplay(sumOfAllAvailabilities, stateToDisplay);
         setIsDisplayAll(true);
         setActiveTimeblocks(availabilitiesToDisplay);
     }
@@ -434,10 +435,17 @@ function Schedule() {
                     </div>
                 </div>
                 <div className="schedule-sidebar">
-                    <Selector
+                    {isDisplayAll ?
+                    <ViewSelector
                     activeStates={activeStates}
                     setActiveStatesMapped={setActiveStatesMapped}
                     setActiveState={setActiveState}/>
+                    :<Selector
+                    activeStates={activeStates}
+                    setActiveStatesMapped={setActiveStatesMapped}
+                    setActiveState={setActiveState}/>
+                    }
+                    
                     <Users
                     statusMap={statusMap.current}
                     updateUser={updateUser}

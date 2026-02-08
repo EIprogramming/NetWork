@@ -1,4 +1,4 @@
-import State, { availableState, unavailableState } from "../classes/state";
+import State, { unavailableState } from "../classes/state";
 
 
 export function hexToNum(hex: string) {
@@ -55,9 +55,7 @@ export function getGradientStateColor(stateToDisplay: State, gradientSize: numbe
     return gradientStates;
 }
 
-export function getAllAvailabilitiesToDisplay(sumOfAllAvailabilities: number[][]) {
-    const stateToDisplay = availableState;
-
+export function getAllAvailabilitiesToDisplay(sumOfAllAvailabilities: number[][], stateToDisplay: State) {
     const sumOfAllAvailabilities1D = sumOfAllAvailabilities.flat();
     const minValue = Math.min(...sumOfAllAvailabilities1D);
     const maxValue = Math.max(...sumOfAllAvailabilities1D);

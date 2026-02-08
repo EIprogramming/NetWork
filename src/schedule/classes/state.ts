@@ -11,7 +11,6 @@ class State {
         this.isDefault = isDefault;
     }
 }
-
 export const errorState = new State("ERROR", DEFAULT_COLORS.black, true);
 export const unavailableState = new State("Unavailable", DEFAULT_COLORS.white, true);
 export const unsureState = new State("If Necessary", DEFAULT_COLORS.yellow, true); // todo: remove for final product

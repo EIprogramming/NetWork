@@ -1,0 +1,19 @@
+
+
+.multiselect-element-container {
+    display: flex;
+    flex-direction: column;
+    margin: 4px;
+    width: 100%;
+}
+
+.multiselect-element {
+    width: 100%;
+    border-radius: 8px;
+    padding: 0.25rem 1.5rem;
+}
+
+
+.multiselect-element:hover {
+    background-color: var(--highlight-background);
+}

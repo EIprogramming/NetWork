@@ -28,6 +28,8 @@
   --font-color-dark: #1d1d1d;
   --font-color-red: #bb3e1b;
 
+  --white-background-color: #ffffff;
+  --light-background-color: #7896ca;
   --background-color: #23395e;
   --dark-background-color: #152137;
   --background-color-glass: rgba(0, 0, 0, 0.25);
@@ -36,6 +38,8 @@
   --border-color: rgba(255, 255, 255, 0.75);
   --border-color-dark: rgba(160, 160, 160, 0.75);
   --font-family: JetBrainsMono, monospace;
+
+  --container-width: 400px;
 }
 
 /*Light Mode Variables

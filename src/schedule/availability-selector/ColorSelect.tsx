@@ -71,13 +71,13 @@ function ColorPicker( {color, setColor, state, setState, isDefault, tabIndex } :
     return (
         <>
             <div className="color-select-parent">
-            {<button tabIndex={tabIndex} type="button"
-            className="selector-form-element selector-form-color" onClick={displayColorPicker}
-            ref={colorSelectButton}
-            style={{
-                backgroundColor: color,
-            }}/>}
-            {isDisplayColorPicker ?
+                {<button tabIndex={tabIndex} type="button"
+                className="selector-form-element selector-form-color" onClick={displayColorPicker}
+                ref={colorSelectButton}
+                style={{
+                    backgroundColor: color,
+                }}/>}
+                {isDisplayColorPicker ?
                 <div className="color-select"
                 ref={colorSelect}>
                     {generateColourOptions()}

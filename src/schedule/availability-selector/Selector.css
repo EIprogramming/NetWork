@@ -1,7 +1,7 @@
 .selector-container {
     display: flex;
     flex-direction: column;
-    width: 400px;
+    width: var(--container-width);
     height: fit-content;
     margin-left: 2rem;
     padding: 2rem 1rem;
@@ -27,10 +27,6 @@
     cursor: text;
 }
 
-.selector {
-    margin-right: 16px;
-}
-
 .selector-spacer {
     flex-grow: 1;
 }
@@ -54,4 +50,8 @@
     padding: 4px;
     border-radius: 9999px;
     border: none;
+}
+
+.selector-radio {
+    margin-right: 1rem;
 }

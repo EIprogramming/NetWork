@@ -5,13 +5,14 @@ import { availableState } from './classes/state';
 import type User from './classes/user';
 import './Users.css'
 import type Coordinate from './classes/coordinate';
+import { MultiSelect } from './multiselect/MultiSelect';
 
 interface Props {
     statusMap: Map<string, number>,
     updateUser: (newUser: User) => void,
     defaultUser: User | null,
     allUsers: User[],
-    displayAllAvailabilities: (sumOfAllAvailabilities: number[][]) => void,
+    displayAllAvailabilities: (sumOfAllAvailabilities: number[][], stateToDisplay: State) => void,
     resetAvailabilityToDefault: () => void,
     hoveredTimeblock: Coordinate
 }
@@ -25,6 +26,7 @@ function Users({
     resetAvailabilityToDefault,
     hoveredTimeblock} : Props) {
     const [isDisplayAll, setIsDisplayAll] = useState<boolean>(false);
+    const [selectedStates, setSelectedStates] = useState<State[]>([]);
 
     function isAllZeros(array2D: number[][]): boolean {
         return array2D.every(row => {
@@ -36,13 +38,13 @@ function Users({
     };
 
     function sumNumericalStates(
-        numericalState: number,
+        numericalStates: number[],
         allUserAvailabilities: number[][][],
         rowIndex: number,
         colIndex: number) {
         let sumOfStates = 0;
             for (const userAvailability of allUserAvailabilities) {
-                if (userAvailability[rowIndex][colIndex] === numericalState) {
+                if (numericalStates.includes(userAvailability[rowIndex][colIndex])) {
                     sumOfStates++;
                 }
             }
@@ -51,7 +53,7 @@ function Users({
     }
 
     // todo: when a user has empty availability, delete on entry of someone else
-    function getAllUserAvailabilities(state: State, toggle=true) {
+    function viewAllUserAvailabilities(states: State[], toggle=true) {
         // if not logged in (i.e. default user not set) then return
         if (!defaultUser) return;
         if (isDisplayAll && toggle) {
@@ -69,18 +71,18 @@ function Users({
         // create a 2D availability array of the number of times each desired state is available
         if (!allUserAvailabilities) return;
         const firstUserAvailability = allUserAvailabilities[0];
-        const numericalDesiredState = getStatusNumber(state, statusMap);
+        const numericalDesiredStates = states.map(state => getStatusNumber(state, statusMap));
         const sumOfAllAvailabilities = firstUserAvailability.map((row: number[], rowIndex: number) => {
             return row.map((_value, colIndex: number) => {
                 return sumNumericalStates(
-                    numericalDesiredState,
+                    numericalDesiredStates,
                     allUserAvailabilities,
                     rowIndex,
                     colIndex);
             });
         });
 
-        displayAllAvailabilities(sumOfAllAvailabilities);
+        displayAllAvailabilities(sumOfAllAvailabilities, selectedStates[0]);
         setIsDisplayAll(true);
     }
 
@@ -97,7 +99,7 @@ function Users({
     function handleMouseLeave() {
         if (!defaultUser) return;
         if (isDisplayAll) {
-            getAllUserAvailabilities(availableState, false);
+            viewAllUserAvailabilities(selectedStates, false); // TODO TODO TODO!! change to selected...
         } else {
             updateUser(defaultUser);
         }
@@ -181,9 +183,13 @@ function Users({
             <div className="users-separator"></div>
             <button
                 className={isDisplayAll ? "users-button-activated" : ""}
-                onClick={() => getAllUserAvailabilities(availableState)}>
-                View All Users    
+                onClick={() => viewAllUserAvailabilities(selectedStates)}>
+                {isDisplayAll? "View Your Response" : "View All Responses"}  
             </button>
+            <div className="users-separator"></div>
+            <MultiSelect
+                selectedStates={selectedStates}
+                setSelectedStates={setSelectedStates} />
         </div>
     );
 }

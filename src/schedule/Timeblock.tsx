@@ -75,9 +75,6 @@ function Timeblock({
         tabIndex={focusIndex}
         className="timeblock no-drag"
         id={`C${col} R${row}`}
-        //onKeyDown={handleKeyDown}
-        //onFocus={() => setIsFocused(true)}
-        //onBlur={() => setIsFocused(false)}
         onMouseDown={(e) => handleMouseDown(e)}
         onClick={(e) => handleClick(e)}
         onMouseEnter={(e) => handleMouseEnter(e)}
