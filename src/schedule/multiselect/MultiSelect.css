@@ -1,0 +1,21 @@
+.multiselect-button {
+    height: 2rem;
+    width: fit-content;
+    align-self: center;
+}
+
+.multiselect-overlay-container {
+    display: flex;
+    height: fit-content;
+    align-self: center;
+}
+
+.multiselect-overlay {
+    position: absolute;
+    display: flex;
+    background-color: white;
+    color: var(--font-color-dark);
+
+    margin-top: 0.5rem;
+    border-radius: 10px;
+}

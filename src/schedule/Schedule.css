@@ -7,6 +7,10 @@
     flex-grow: 1;
 }
 
+.schedule-grid-wrapper { /* purely so that .schedule-login-overlay fills .schedule when applying inset: 0*/
+    position: relative;
+}
+
 .schedule {
     display: flex;
     flex-direction: row;
@@ -21,9 +25,10 @@
     content: '';
 }
 
-
 .schedule-title {
     text-align: center;
+    
+    user-select: text; /* prevents not being able to select text*/
 }
 
 .schedule-container {
@@ -31,6 +36,12 @@
     flex-direction: row;
     flex-wrap: nowrap;
     margin-bottom: 2rem;
+}
+
+.schedule-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
 }
 
 .titleblock {
@@ -46,6 +57,8 @@
     color: var(--font-color);
     border: 1px solid black;
     font-weight: bold;
+    
+    user-select: text; /* prevents not being able to select text*/
 }
 
 .emptyblock {

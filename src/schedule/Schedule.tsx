@@ -1,132 +1,205 @@
-import { useRef, useState } from 'react'
-import Timeblock from './Timeblock.tsx'
-import Selector from './Selector.tsx'
-import State from './state.ts';
-import './Schedule.css'
-import { getTimeRange } from '../utils.ts'
-import { useSearchParams } from "react-router"
-import { getLocalTimeZone, parseDate, type CalendarDate } from '@internationalized/date';
+// EXTERNAL LIBRARIES
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useParams } from "react-router";
 import { useDateFormatter } from 'react-aria';
+import { parseDate } from '@internationalized/date';
 
-type TimeRange = {
-    start: CalendarDate,
-    end: CalendarDate,
-}
+// API FUNCTIONS
+import { fetchScheduleData, fetchUsers, postUserAvailability } from './API/scheduleAPI.ts';
 
-/**
- * Edits an array in a rectangular section between two corners (firstElement) and (lastElement)
- * @param firstElement - coordinates of the first corner of the array in [col, row] format
- * @param lastElement - coordinates of the second corner of the array in [col, row] format
- * @param array - the array to be *modified*
- * @param value - the value to fill this rectangle with
- */
-function editArrayRegion(
-    firstElement: Array<number>, lastElement: Array<number>,
-    array: Array<Array<State>>, value: State) {
-    
-    // default behaviour if one of the elements is 'outside' the schedule
-    if (firstElement[0] === -1 || lastElement[0] === -1) return;
+// UTILITY FUNCTIONS
+import { makeDays, type TimeRange } from './utils/dateUtils.ts';
+import { getAllAvailabilitiesToDisplay } from './utils/displayAllUtils.ts';
+import { getTimeblockLabel } from './utils/timeblockUtils.ts';
+import { editArrayRegion, getTimeRange, initialize2DArray } from '../utils.ts';
 
-    let [coli, rowi] = firstElement;
-    let [colf, rowf] = lastElement;
+// CLASSES AND TYPES
+import State, { availableState, unavailableState, unsureState } from './classes/state.ts';
+import Coordinate from './classes/coordinate.ts';
+import type User from './classes/user.ts';
 
-    // swap final / initial values for row if the final is greater than initial
-    if (rowf < rowi) {[rowi, rowf] = [rowf, rowi]}
-    if (colf < coli) {[coli, colf] = [colf, coli]}
+// COMPONENTS
+import Timeblock from './Timeblock.tsx';
+import Login from './Login.tsx';
+import Users from './Users.tsx';
+import Selector from './availability-selector/Selector.tsx';
 
-    // go through each element on the rectangle and modify it to the desired value
-    for (let i = coli; i <= colf; i++) {
-        for (let j = rowi; j <= rowf; j++) {
-            array[i][j] = value;
-        }
-    }
-}
-
-/**
- * Initializes a 2D array filled with a default value.
- * @param columns - The number of columns in the array.
- * @param rows - The number of rows in the array.
- * @param value - the value to be filled, default is false
- * @returns 2D array filled with a default value..
- */
-function initialize2DArray(columns: number, rows: number, value: any="") {
-    return [...Array(columns)].map(_element => Array(rows).fill(value));
-}
+// STYLESHEET
+import './Schedule.css';
+import { fetchStates } from './API/statusAPI.ts';
+import ViewSelector from './availability-selector/ViewSelector.tsx';
 
 function Schedule() {
-    const [searchParams, _setSearchParams] = useSearchParams();
+    // ========================================================================
+    // =========================== Search Parameters ==========================
+    // ========================================================================
+    const  { "*": scheduleId } = useParams();
+    const [title, setTitle] = useState("");
 
-    const [title, _setTitle] = useState(searchParams.get("name"));
-
-    // initialize the days and times (in 12 hour format) that the schedule spans
-    // TODO: add feature to specify these by the user
-    const startDate = searchParams.get("sDay")
-    const endDate = searchParams.get("eDay")
-    const range: TimeRange = {
-        start: parseDate(startDate? startDate : ""),
-        end: parseDate(endDate? endDate : "")
-    };
-
+    // ========================================================================
+    // ============================= Date and Time ============================
+    // ========================================================================
     const formatter = useDateFormatter({ month: 'long', weekday: 'long', day: 'numeric' });
+    const [range, setRange] = useState<TimeRange>({
+        start: parseDate("1970-01-01"),
+        end: parseDate("1970-01-01")
+    });
 
-    function makeDays(range: TimeRange) {
-        const dates = [];
-        let currentDate: CalendarDate = range.start;
-        let i = 0; // prevent infinite loops by having maximum loop limit
-        // .compare() < 0 returns true if the first date is before the second
-        while (currentDate.compare(range.end) <= 0 && i <= 20) {
-            i++;
-            const currentDateStr = formatter.format(currentDate.toDate(getLocalTimeZone()))
-            dates.push(currentDateStr);
-            currentDate = currentDate.add({days: 1});
-        }
-    
-        return dates;
+    const [days, setDays] = useState(makeDays(range, formatter));
+    const [startTime, setStartTime] = useState(0);
+    const [endTime, setEndTime] = useState(-1);
+    const [times, setTimes] = useState(getTimeRange(startTime, endTime));
+
+    // ========================================================================
+    // ============================== User State ==============================
+    // ========================================================================
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const currentUser = useRef<User | null>(null);
+    const [defaultUser, setDefaultUser] = useState<User | null>(null);
+    const [allUsers, setAllUsers] = useState<Array<User>>([]);
+
+    function updateUser(newUser: User) {
+        currentUser.current = newUser;
+        setActiveTimeblocks(newUser.availability);
     }
 
-    //const [days, _setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
-    const [days, _setDays] = useState(makeDays(range));
-    const startTime = Number(searchParams.get("sTime"));
-    const endTime = Number(searchParams.get("eTime"));
-    const [times, _setTimes] = useState(getTimeRange(startTime, endTime));
+    function updateAllUsers(updatedUser: User) {
+        allUsers.forEach(user => {
+            if (user.username === updatedUser.username) {
+                user.availability = updatedUser.availability;
+            }
+        });
+    }
 
-    // an array of the possible states that a Timeblock may take
-    // TODO: add feature to specify these by the user
-    const unavailableState = new State("Unavailable", "rgba(255, 200, 200, 1)", true);
-    const unsureState = new State("Unsure", "rgba(255, 255, 200, 1)", true);
-    const availableState = new State("Available", "rgba(200, 255, 200, 1)", true);
+    function isDefaultUser() {
+        // if the currentUser exists (currentUser.current) and its username is NOT equal to the default users
+        // then it is NOT the default user... so the converse means that it IS the default user
+        return !(currentUser.current && currentUser.current.username !== defaultUser?.username);
+    }
 
-    const [activeStates, setActiveStates] = useState([unavailableState, unsureState, availableState]);
-    const [activeState, setActiveState] = useState(activeStates[1]); // current state being applied
-    const defaultState = useRef(activeStates[0]); // state to apply if deselecting current state
+    // ========================================================================
+    // =========================== All Users View =============================
+    // ========================================================================
+    const [isDisplayAll, setIsDisplayAll] = useState<boolean>(false);
+    const [hoveredTimeblock, setHoveredTimeblock] = useState<Coordinate>( new Coordinate(-1, -1) );
+
+    function displayAllAvailabilities(sumOfAllAvailabilities: number[][], stateToDisplay: State) {
+        const availabilitiesToDisplay = getAllAvailabilitiesToDisplay(sumOfAllAvailabilities, stateToDisplay);
+        setIsDisplayAll(true);
+        setActiveTimeblocks(availabilitiesToDisplay);
+    }
+
+    // turns off displaying all user availabilities
+    function resetAvailabilityToDefault() {
+        setIsDisplayAll(false);
+        setActiveTimeblocks(oldActiveTimeblocks);
+    }
+
+    // on startup: set the schedule data and user data
+    useEffect(() => {
+        async function setAllData() {
+            async function setScheduleData() {
+                const scheduleData = await fetchScheduleData(scheduleId, formatter);
+                if (!scheduleData) return;
+
+                setTitle(scheduleData.title);
+                setRange(scheduleData.range);
+                setDays(scheduleData.days);
+                setStartTime(scheduleData.startTime);
+                setEndTime(scheduleData.endTime);
+                setTimes(scheduleData.times);
+                setActiveTimeblocks(scheduleData.initialTimeblocks);
+                setOldActiveTimeblocks(scheduleData.initialTimeblocks);
+            }
+
+            async function setStates() {
+                if (!scheduleId) return;
+                const stateData = await fetchStates(scheduleId);
+                setActiveStatesMapped(stateData);
+            }
+
+            async function setUsersData() {
+                const users = await fetchUsers(scheduleId, reverseStatusMap.current);
+                setAllUsers(users);
+            }
+
+            setStates().then(() => {
+                setScheduleData().then(() => {
+                    setUsersData();
+                });
+            });
+        }
+
+        setAllData();
+    }, [scheduleId, formatter]);
+
+    // ========================================================================
+    // =================== State and Timeblock Management =====================
+    // ========================================================================
+    const [activeStates, setActiveStates] = useState([availableState, unsureState, unavailableState]);
+
+    const [activeState, setActiveState] = useState(availableState); // current state being applied
+    const defaultState = useRef(unavailableState); // state to apply if deselecting current state
+
+    const statusMap = useRef<Map<string, number>>(new Map());
+
+    const reverseStatusMap = useRef<Map<number, State>>(new Map());
+
+    function setActiveStatesMapped(newActiveStates: State[]) {
+        setActiveStates(newActiveStates);
+        updateStatusMap(newActiveStates);
+        updateReverseStatusMap(newActiveStates);
+    }
+
+    function updateStatusMap(newActiveStates: State[]) {
+        const map = new Map<string, number>();
+        newActiveStates.forEach((state: State, i: number) => {
+            map.set(state.name, i);
+        })
+        statusMap.current = map;
+    }
+
+    function updateReverseStatusMap(newActiveStates: State[]) {
+        const map = new Map<number, State>();
+        newActiveStates.forEach((state: State, i: number) => {
+            map.set(i, state);
+        })
+        reverseStatusMap.current = map;
+    }
 
     // isApplyingValue keeps track of whether activeState is being applied (true) or defaultState (false)
     const [isApplyingValue, setIsApplyingValue] = useState(false);
 
     // the schedule array that contains the activeState of each individual Timeblock element
     // each column corresponds to a day, and each row to a 15 minute segment of time (4 rows per hour)
-    const [activeTimeblocks, setActiveTimeblocks] = useState(initialize2DArray(days.length, 4*times.length, unavailableState));
+    const [activeTimeblocks, setActiveTimeblocks] = useState<State[][]>(initialize2DArray(days.length, 4*times.length, unavailableState));
     
     // a second array that keeps track of the previous schedule array,
     // so that adding rectangular selections during editing may be reverted
-    const [oldActiveTimeblocks, setOldActiveTimeblocks] = useState(initialize2DArray(days.length, 4*times.length, unavailableState));
+    const [oldActiveTimeblocks, setOldActiveTimeblocks] = useState<State[][]>(initialize2DArray(days.length, 4*times.length, unavailableState));
 
     // the first and last element in a rectangular selection, initialized to [-1, -1] to establish type
     const [firstElement, setFirstElement] = useState([-1, -1]);
     const [lastElement, setLastElement] = useState([-1, -1]);
 
-    /**
-     * Get exact day and time of a specific Timeblock
-     * @param col - the column number of the Timeblock component
-     * @param row - the row number of the Timeblock component
-     * @returns Day, hour:minutes (e.g. Monday, 9:00)
-     */
-    function getTimeblockTime(col: number, row: number) {
-        const day = days[col];
-        const hour = times[Math.floor(row/4)].slice(0,1);
-        const mins = 15*(row%4);
+    const saveTimeBlocks = (timeblocks: State[][]) => {
+        if (!isLoggedIn ||
+            !defaultUser ||
+            !scheduleId) return;
+        const updatedDefaultUser: User = defaultUser;
+        updatedDefaultUser.availability = timeblocks;
+    
+        setDefaultUser(updatedDefaultUser)
+        updateAllUsers(updatedDefaultUser)
+        
+        const postUser = {
+            username: defaultUser.username,
+            scheduleId: scheduleId,
+            availability: timeblocks
+        }
 
-        return `${day}, ${hour}:${mins}`;
+        postUserAvailability(postUser, statusMap.current);
+        setOldActiveTimeblocks(timeblocks);
     }
 
     /**
@@ -138,6 +211,15 @@ function Schedule() {
      * @param isFirstElement - whether the Timeblock component is the first element selected (see: `Timeblock handleMouseDown()`)
      */
     const handleTimeblockSelected = (col: number, row: number, isFirstElement: boolean) => {
+        if (!isLoggedIn) return;
+        
+        // if the currentUser exists (currentUser.current) and its username is NOT equal to the default users,
+        // prevent editing
+        if (!isDefaultUser()) return;
+
+        // if currently displaying all users, dont allow edits
+        if (isDisplayAll) return;
+
         // initialize 'next' values that may be modified within the function without waiting for setFoo() from React useState
         let nextIsApplyingValue = isApplyingValue;
         let nextPrevActiveTimeblocks = oldActiveTimeblocks; // TODO: rename oldActive to prevActive...
@@ -145,14 +227,14 @@ function Schedule() {
         let nextLastElement = lastElement;
 
         if (isFirstElement) {
-            // if this is the first element selected, determine if we are
-            // toggling elements to become active or inactive
-            nextIsApplyingValue = !(activeTimeblocks[col][row] == activeState);
-            setIsApplyingValue(nextIsApplyingValue)
-
             // update the current 'first element' that was selected
             nextFirstElement = [col, row];
             setFirstElement(nextFirstElement);
+            
+            // if this is the first element selected, determine if we are
+            // toggling elements to become active or inactive
+            nextIsApplyingValue = !(activeTimeblocks[col][row].name === activeState.name);
+            setIsApplyingValue(nextIsApplyingValue)
 
             // save a copy of the old schedule in case the selection size changes
             nextPrevActiveTimeblocks = activeTimeblocks;
@@ -170,20 +252,118 @@ function Schedule() {
         // apply changes to old schedule and then make them into the new schedule
         if (nextIsApplyingValue) { state = activeState; }
         else { state = defaultState.current }
-        editArrayRegion(nextFirstElement, nextLastElement, nextActiveTimeBlocks, state);
+        editArrayRegion(nextFirstElement, nextLastElement, nextActiveTimeBlocks,
+            state, activeState, defaultState.current);
         setActiveTimeblocks(nextActiveTimeBlocks);
     }
-    
-    function handleMouseDown(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        if (e.buttons % 2) {
-            getTimeblockTime(0, 1);
-        }
-    }
 
-    function handleMouseUp(_e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    function handleGlobalMouseUp() {
+        if (!isLoggedIn ||
+            isDisplayAll ||
+            !defaultUser ||
+            !isDefaultUser()
+        ) return;
+    
+        saveTimeBlocks(activeTimeblocks);
         setFirstElement([-1, -1]);
         setLastElement([-1, -1]);
     }
+
+    useEffect(() => {
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+
+        // Cleanup function to remove the event listener when the component unmounts
+        return () => {
+            window.removeEventListener('mouseup', handleGlobalMouseUp);
+        };
+    }, [activeTimeblocks]);
+
+    // ===========================================================================
+    // ============= Accessibility Management for Tabulated Controls =============
+    // ===========================================================================
+    const [gridIsFocused, setGridIsFocused] = useState(false);
+    const [focusedElement, setFocusedElement] = useState<Coordinate>( { col: 0, row: 0} );
+    const timeblockRefs = useRef<(HTMLDivElement | null)[][]>([]);
+
+    function getFocusIndex(colIndex: number, rowIndex: number) {
+        if (!isLoggedIn) return 0;
+        if (focusedElement.col === colIndex && focusedElement.row === rowIndex) return 0;
+        return -1;
+    }
+
+    function moveFocus(e: React.KeyboardEvent<HTMLDivElement>) {
+        const column = focusedElement.col;
+        const maxColumn = activeTimeblocks.length - 1;
+        const row = focusedElement.row;
+        const maxRow = activeTimeblocks[0].length - 1;
+        let nextFocusedElement = null;
+
+        switch (e.key) {
+            case "ArrowUp":
+                if (row === 0) { nextFocusedElement = {col: column, row: maxRow}; }
+                else { nextFocusedElement = {col: column, row: row - 1}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            case "ArrowDown":
+                if (row === maxRow) { nextFocusedElement = {col: column, row: 0}; }
+                else { nextFocusedElement = {col: column, row: row + 1}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            case "ArrowLeft":
+                if (column === 0) { nextFocusedElement = {col: maxColumn, row: row}; }
+                else { nextFocusedElement = {col: column - 1, row: row}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            case "ArrowRight":
+                if (column === maxColumn) { nextFocusedElement = {col: 0, row: row}; }
+                else { nextFocusedElement = {col: column + 1, row: row}; }
+                setFocusedElement(nextFocusedElement);
+                break;
+            default:
+                break;
+        }
+        
+        if (nextFocusedElement) handleTimeblockSelected(nextFocusedElement.col, nextFocusedElement.row, false);
+        e.preventDefault();
+    }
+
+    /**
+     * move the focus along the arrow keys by calling moveFocus() and
+     * handle enterring time via pressing enter
+     * @param e - keyboard event from keydown
+     */
+    function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        if (e.key.startsWith("Arrow")) {
+            moveFocus(e);
+        } else if (e.key === "Enter") {
+            if (firstElement[0] === -1 && firstElement[1] === -1) {
+                handleTimeblockSelected(focusedElement.col, focusedElement.row, true);
+            } else {
+                // by saving the current selection, 'escapes' out of availability entry mode
+                saveTimeBlocks(activeTimeblocks);
+                setFirstElement([-1, -1]);
+            }
+        }
+    }
+
+    /** Updates the focus on the timeblock on a DOM mutation,
+     *  and prevents autofocus on page load by checking !gridIsFocused and !timeblockRefs
+     */
+    useLayoutEffect(() => {
+        // make sure the grid is already focused and the reference list exists
+        if (!gridIsFocused || !timeblockRefs) return;
+
+        const col = focusedElement.col;
+        const row = focusedElement.row;
+        const focusedTimeblock = timeblockRefs.current[row][col];
+        if (!focusedTimeblock) return;
+
+        focusedTimeblock.focus();
+    }, [focusedElement]);
+
+    /* =========================================================================== */
+    /* ======================= react component generation ======================== */
+    /* =========================================================================== */
 
     /**
      * Generates React components based on the schedule array of the form:\n
@@ -200,17 +380,6 @@ function Schedule() {
      * @returns the schedule in React component format
      */
     function createSchedule(schedule: Array<Array<State>>, days: Array<string>, times: Array<string>) {
-        /* creates a schedule based on a two-dimensional array
-            of the form:
-            <div className="schedule-column">
-            <Timeblock />
-            ... 
-            <Timeblock />
-            </div>
-            ...
-            <div className="schedule-column">...</div>
-        */
-
         return (
             <>
             <div className="schedule-column no-drag">
@@ -228,7 +397,12 @@ function Schedule() {
                         key={`C${colNum}R${rowNum}`}
                         col={colNum} row={rowNum}
                         value={activeTimeblocks[colNum][rowNum]}
-                        handleSelected={handleTimeblockSelected}/>
+                        ariaLabel={getTimeblockLabel(activeTimeblocks, days, times, colNum, rowNum)}
+                        handleSelected={handleTimeblockSelected}
+                        focusIndex={getFocusIndex(colNum, rowNum)}
+                        refs={timeblockRefs}
+                        hoveredTimeblock={hoveredTimeblock}
+                        setHoveredTimeblock={setHoveredTimeblock} />
                     })}
                 </div>)
             })}
@@ -236,26 +410,56 @@ function Schedule() {
         )
     }
 
-    return (
-        <>
+    return (<>
+        {/*Load schedule if title is not empty*/}
+        {title?
         <div className="schedule-wrapper">
             <h1 className="schedule-title">{title}</h1>
             <div className="schedule-container">
-                <div
-                draggable="false"
-                onMouseDown={handleMouseDown}
-                onMouseUp = {handleMouseUp}
-                className="schedule">
-                    {createSchedule(activeTimeblocks, days, times)}
+                <div className="schedule-grid-wrapper">
+                    <div
+                    draggable="false"
+                    onKeyDown= {handleKeyDown}
+                    onFocus={() => setGridIsFocused(true)}
+                    onBlur={() => setGridIsFocused(false)}
+                    className="schedule"
+                    role="grid">
+                        {!isLoggedIn && <Login
+                            setDefaultUser={setDefaultUser}
+                            setIsLoggedIn={setIsLoggedIn}
+                            reverseStatusMap={reverseStatusMap.current}
+                            activeTimeblocks={activeTimeblocks}
+                            setActiveTimeblocks={setActiveTimeblocks}
+                            setOldActiveTimeblocks={setOldActiveTimeblocks} />}
+                        {createSchedule(activeTimeblocks, days, times)}
+                    </div>
                 </div>
-                <Selector 
-                activeStates={activeStates}
-                setActiveStates={setActiveStates}
-                setActiveState={setActiveState}/>
+                <div className="schedule-sidebar">
+                    {isDisplayAll ?
+                    <ViewSelector
+                    activeStates={activeStates}
+                    setActiveStatesMapped={setActiveStatesMapped}
+                    setActiveState={setActiveState}/>
+                    :<Selector
+                    activeStates={activeStates}
+                    setActiveStatesMapped={setActiveStatesMapped}
+                    setActiveState={setActiveState}/>
+                    }
+                    
+                    <Users
+                    statusMap={statusMap.current}
+                    updateUser={updateUser}
+                    defaultUser={defaultUser}
+                    allUsers={allUsers}
+                    displayAllAvailabilities={displayAllAvailabilities}
+                    resetAvailabilityToDefault={resetAvailabilityToDefault}
+                    hoveredTimeblock={hoveredTimeblock} />
+                </div>
             </div>
-        </div>
+        </div> : null}
         </>
-    )
+        
+    );
 }
 
 export default Schedule

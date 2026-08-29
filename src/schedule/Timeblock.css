@@ -1,5 +1,12 @@
 .timeblock {
     box-sizing: border-box;
+    position: relative;
     width: var(--block-width);
     height: var(--timeblock-height);
 }
+
+.timeblock:focus {
+    z-index: 1;
+    outline-offset: -1px;
+}
+

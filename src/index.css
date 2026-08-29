@@ -5,6 +5,13 @@
 }
 
 @font-face {
+ font-family: "JetBrainsMono";
+  src: local("JetBrainsMono"),
+    url("./fonts/JetBrainsMono/JetBrainsMono-Italic-VariableFont_wght.ttf") format("truetype");
+  font-style: italic;
+}
+
+@font-face {
  font-family: "Orbitron";
   src: local("Orbitron"),
     url("./fonts/Orbitron/Orbitron-VariableFont_wght.ttf") format("truetype");
@@ -19,14 +26,20 @@
   --font-color-secondary: #dbdbdb;
   --font-color-gray: #b9b9b9;
   --font-color-dark: #1d1d1d;
+  --font-color-red: #bb3e1b;
 
+  --white-background-color: #ffffff;
+  --light-background-color: #7896ca;
   --background-color: #23395e;
   --dark-background-color: #152137;
   --background-color-glass: rgba(0, 0, 0, 0.25);
   
   --accent-color: #0071ad;
   --border-color: rgba(255, 255, 255, 0.75);
+  --border-color-dark: rgba(160, 160, 160, 0.75);
   --font-family: JetBrainsMono, monospace;
+
+  --container-width: 400px;
 }
 
 /*Light Mode Variables
@@ -73,16 +86,34 @@ body {
 
 button {
   font-size: 16px;
+  font-family: var(--font-family);
+
+  padding: 4px 1rem;
   color: var(--font-color);
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0);
   border: 2px solid var(--border-color);
   border-radius: 9999px;
 }
 
 button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  cursor:pointer;
+  background-color: rgba(0, 0, 0, 0.20);
 }
 
 button:active {
-  background-color: rgba(0, 0, 0, 0.25);
+  cursor:pointer;
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+input[type="text"], input[type="password"] {
+  font-family: JetBrainsMono, monospace;
+  padding: 2px 8px;
+  color: var(--font-color);
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--border-color);
+  border-radius: 0.25rem;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+  outline: 2px solid var(--border-color);
 }

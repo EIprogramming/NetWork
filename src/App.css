@@ -12,6 +12,7 @@ a {
   align-items: center;
   flex-direction: column;
   min-height: 100%;
+  min-width: fit-content;
 
   box-sizing: border-box;
   background-color: var(--background-color);
@@ -61,4 +62,10 @@ a {
   -moz-user-select: none;
   -o-user-select: none;
   user-select: none;
+}
+
+.icon {
+    height: 100%;
+    -webkit-filter: invert(100%); /* safari 6.0 - 9.0 */
+    filter: invert(100%);
 }

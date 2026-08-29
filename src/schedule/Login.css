@@ -1,0 +1,49 @@
+.schedule-login-overlay {
+    position: absolute;
+    inset: 0; /*ensures .schedule-login-overlay fills the full space of the parent schedule grid*/
+    z-index: 1;
+}
+
+.schedule-login-align {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.schedule-login {
+    margin-left: var(--block-width);
+    margin-top: var(--block-height);
+    min-height: 24rem;
+    width: 32rem;
+    padding: 2rem;
+    text-align: center;
+    border-radius: 1rem;
+    border: 2px solid var(--border-color);
+    background-color: var(--background-color);
+}
+
+.schedule-login-title {
+    margin-top: 0;
+}
+
+.schedule-login-italic {
+    font-style: italic;
+}
+
+.schedule-login-spacer {
+    height: 2rem;
+}
+
+.schedule-login-input {
+    height: 2rem;
+}
+
+div[role="alert"] {
+    color: var(--font-color-red);
+    font-style: italic;
+    height: 21px;
+    margin-bottom: -21px;
+    font-size: 14px;
+}

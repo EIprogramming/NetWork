@@ -70,9 +70,17 @@
 }
 
 /*set the select font colours to a dark font for readability*/
-.dropdown-item>.react-aria-Text {
+.dropdown-item>.react-aria-Text, .dropdown-item>.lucide-check {
     font-family: var(--font-family);
     color: var(--font-color-dark);
+}
+
+.select-popover {
+    background-color: white;
+}
+
+.react-aria-CalendarCell {
+    margin: 2.5px 0px !important; /* removes minor visual bug of changing margins on the changing calendar*/
 }
 
 .event-start-end-divider {
