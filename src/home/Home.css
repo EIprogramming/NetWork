@@ -1,0 +1,111 @@
+.event-wrapper {
+    min-height: 100%;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-title {
+    min-width: 12rem;
+    height: 3rem;
+
+    font-size: 24px;
+    text-align: center;
+    font-family: var(--font-family);
+    color: var(--font-color);
+    
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 0.25rem;
+}
+
+.event-title:focus {
+    outline: none;
+}
+
+.event-calendar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.event-time-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.event-start-end-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.event-spacer {
+    height: 3rem;
+}
+
+/* increase size of react-aria calendar component*/
+.event-calendar {
+  --cell-size: 4rem;
+  --font-size: 1.25rem; /* element size */
+  --font-size-lg: 1.25rem; /* header font size */
+  --spacing: 0.35rem; /* chevron size */
+  width: calc(var(--cell-size) * 7);
+}
+
+.event-time-select>.react-aria-Label {
+    font-family: var(--font-family);
+    text-align: center;
+    font-size: 1rem;
+    color: var(--font-color);
+}
+
+.event-time-select>.react-aria-Button {
+    font-family: var(--font-family); /*kind of dont like the font*/
+    border: 2px solid var(--border-color);
+    border-radius: 9999px;
+}
+
+/*set the select font colours to a dark font for readability*/
+.dropdown-item>.react-aria-Text, .dropdown-item>.lucide-check {
+    font-family: var(--font-family);
+    color: var(--font-color-dark);
+}
+
+.select-popover {
+    background-color: white;
+}
+
+.react-aria-CalendarCell {
+    margin: 2.5px 0px !important; /* removes minor visual bug of changing margins on the changing calendar*/
+}
+
+.event-start-end-divider {
+    height: 2rem;
+}
+
+.event-meet {
+    font-family: var(--font-family);
+    padding: 4px 12px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.event-meet-invalid {
+    color: var(--font-color-gray);
+    border-color: var(--font-color-gray);
+    opacity: 0.75;
+    cursor: not-allowed; /* change to something more friendly looking? */
+}
+
+
+.event-meet-invalid:active {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.event-meet-invalid:hover {
+    background-color: rgba(0, 0, 0, 0);
+}

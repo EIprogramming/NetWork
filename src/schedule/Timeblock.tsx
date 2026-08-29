@@ -1,23 +1,31 @@
-//import {useRef, useState } from 'react'
-import State from './state';
-import './Timeblock.css'
+import type React from 'react';
+import State from './classes/state';
+import './Timeblock.css';
+import Coordinate from './classes/coordinate';
 
 interface Props {
     col: number,
     row: number,
     value: State,
+    ariaLabel: string,
     handleSelected: (col: number, row: number, isFirstElement: boolean) => void,
+    focusIndex: number,
+    refs: React.RefObject<(HTMLDivElement | null)[][]>,
+    hoveredTimeblock: Coordinate,
+    setHoveredTimeblock: React.Dispatch<React.SetStateAction<Coordinate>>,
 }
 
-function Timeblock( {col, row, value, handleSelected} : Props) {
-    /*
-     * TODO: REMOVE THIS FUNCTION IF NOT NECESSARY
-     * Gets the background colour of the Timeblock component based on its `value`
-     * @returns CSS colour of form `rgb(R, G, B)`
-     */
-    //function _getBackgroundColor() {
-    //    return value.color;
-    //}
+function Timeblock({
+    col,
+    row,
+    value,
+    ariaLabel,
+
+    handleSelected,
+    focusIndex,
+    refs,
+    hoveredTimeblock,
+    setHoveredTimeblock } : Props) {
 
     function handleClick(e: React.MouseEvent<HTMLDivElement, MouseEvent>) { handleMouseDown(e) }
 
@@ -30,6 +38,14 @@ function Timeblock( {col, row, value, handleSelected} : Props) {
     function handleMouseEnter(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
         if (e.buttons % 2) {
             handleSelected(col, row, false);
+        }
+
+        setHoveredTimeblock( new Coordinate(col, row));
+    }
+
+    function handleMouseLeave() {
+        if (hoveredTimeblock.col == col && hoveredTimeblock.row == row) {
+            setHoveredTimeblock( new Coordinate(-1, -1) );
         }
     }
 
@@ -47,21 +63,34 @@ function Timeblock( {col, row, value, handleSelected} : Props) {
         }
     }
 
+    function getBorderLeft() {
+        if (col === 0) { return "1px solid black"; }
+        return "";
+    }
+
     return (
-        <>
-            <div
-            className="timeblock no-drag"
-            id={`C${col} R${row}`}
-            onMouseDown={(e) => handleMouseDown(e)}
-            onClick={(e) => handleClick(e)}
-            onMouseEnter={(e) => handleMouseEnter(e)}
-            style={{
-                "backgroundColor": value.color,
-                borderRight: "1px solid black",
-                borderBottom: getBorderBottom(),
-            }}></div>
-        </>
-    )
+        <div
+        aria-label={ariaLabel}
+        role="gridcell"
+        tabIndex={focusIndex}
+        className="timeblock no-drag"
+        id={`C${col} R${row}`}
+        onMouseDown={(e) => handleMouseDown(e)}
+        onClick={(e) => handleClick(e)}
+        onMouseEnter={(e) => handleMouseEnter(e)}
+        onMouseLeave={() => handleMouseLeave()}
+        ref={(element) => {
+            if (!refs.current[row]) refs.current[row] = []; // add a new row to the 2D array for each row
+            if (element) refs.current[row][col] = element;
+        }}
+        style={{ /*TODO: MAKE A GENERIC BORDER FUNCTION */
+            backgroundColor: value.color,
+            borderTop: row === 0 ? "1px solid black" : "",
+            borderRight: "1px solid black",
+            borderBottom: getBorderBottom(),
+            borderLeft: getBorderLeft()
+        }}></div>
+    );
 }
 
 export default Timeblock
